@@ -467,7 +467,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   m_InteractionLayers:
-    m_Bits: 2
+    m_Bits: 16
   m_DistanceCalculationMode: 1
   m_SelectMode: 1
   m_FocusMode: 1
@@ -796,7 +796,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   m_InteractionLayers:
-    m_Bits: 2
+    m_Bits: 16
   m_DistanceCalculationMode: 1
   m_SelectMode: 1
   m_FocusMode: 1
@@ -1384,7 +1384,7 @@ PrefabInstance:
     - target: {fileID: 587143570679723444, guid: e717b69040947d44e9c768ff784f7068,
         type: 3}
       propertyPath: m_InteractionLayers.m_Bits
-      value: 2
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 1557506189042458745, guid: e717b69040947d44e9c768ff784f7068,
         type: 3}
@@ -1409,7 +1409,7 @@ PrefabInstance:
     - target: {fileID: 3015889597382627757, guid: e717b69040947d44e9c768ff784f7068,
         type: 3}
       propertyPath: m_InteractionLayers.m_Bits
-      value: 2
+      value: 16
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
