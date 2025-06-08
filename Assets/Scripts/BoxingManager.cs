@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class BoxingManager : MonoBehaviour
 {
@@ -19,9 +20,19 @@ public class BoxingManager : MonoBehaviour
     public Collider RightController;
     public Collider DestroyCollider; // 큐브가 사라질 콜라이더
     
+    [Header("Controller Transforms (for velocity)")]
+    public Transform LeftControllerTransform;  // 왼쪽 컨트롤러 Transform
+    public Transform RightControllerTransform; // 오른쪽 컨트롤러 Transform
+    
+    [Header("Hit Strength Settings")]
+    public float MinHitVelocity = 2.0f; // 최소 충격 속도 (m/s)
+    public float StrongHitVelocity = 4.0f; // 강한 충격 속도 (m/s)
+    
     [Header("Audio")]
     public AudioClip DestroyAudio; // 큐브가 사라질 때 재생할 오디오
     public AudioClip WrongAudio; // 틀린 컨트롤러와 충돌할 때 재생할 오디오
+    public AudioClip WeakHitAudio; // 약한 충격일 때 재생할 오디오
+    public AudioClip StrongHitAudio; // 강한 충격일 때 재생할 오디오
     
     [Header("Game Status")]
     public int Score = 0;
@@ -29,6 +40,12 @@ public class BoxingManager : MonoBehaviour
     
     private List<BoxingCube> activeCubes = new List<BoxingCube>();
     private AudioSource audioSource;
+    
+    // 실시간 속도 추적을 위한 변수들
+    private Queue<Vector3> leftControllerPositions = new Queue<Vector3>();
+    private Queue<Vector3> rightControllerPositions = new Queue<Vector3>();
+    private Queue<float> positionTimes = new Queue<float>();
+    private int maxPositionHistory = 10; // 최대 10개의 위치 기록
     
     void Start()
     {
@@ -49,6 +66,41 @@ public class BoxingManager : MonoBehaviour
         
         // 화면 밖으로 나간 큐브들 제거
         CleanupCubes();
+        
+        // 실시간 컨트롤러 위치 추적
+        TrackControllerPositions();
+    }
+    
+    void TrackControllerPositions()
+    {
+        float currentTime = Time.time;
+        
+        // 시간 큐 관리
+        positionTimes.Enqueue(currentTime);
+        if (positionTimes.Count > maxPositionHistory)
+        {
+            positionTimes.Dequeue();
+        }
+        
+        // 왼쪽 컨트롤러 위치 추적
+        if (LeftControllerTransform != null)
+        {
+            leftControllerPositions.Enqueue(LeftControllerTransform.position);
+            if (leftControllerPositions.Count > maxPositionHistory)
+            {
+                leftControllerPositions.Dequeue();
+            }
+        }
+        
+        // 오른쪽 컨트롤러 위치 추적
+        if (RightControllerTransform != null)
+        {
+            rightControllerPositions.Enqueue(RightControllerTransform.position);
+            if (rightControllerPositions.Count > maxPositionHistory)
+            {
+                rightControllerPositions.Dequeue();
+            }
+        }
     }
     
     IEnumerator SpawnCubes()
@@ -61,7 +113,6 @@ public class BoxingManager : MonoBehaviour
             yield return new WaitForSeconds(SpawnInterval);
         }
         
-        Debug.Log("All cubes spawned!");
     }
     
     void SpawnRandomCube()
@@ -93,8 +144,6 @@ public class BoxingManager : MonoBehaviour
         
         boxingCube.Initialize(this, isLeftCube);
         activeCubes.Add(boxingCube);
-        
-        Debug.Log($"Spawned {(isLeftCube ? "Left" : "Right")} cube at {spawnPosition}");
     }
     
     void MoveCubes()
@@ -121,23 +170,120 @@ public class BoxingManager : MonoBehaviour
         }
     }
     
-    public void OnCubeHit(BoxingCube cube, bool hitByCorrectController)
+    public void OnCubeHit(BoxingCube cube, bool hitByCorrectController, Collider hitController)
     {
         if (hitByCorrectController)
         {
-            Score++;
-            Debug.Log($"Score: {Score}");
-            PlayDestroySound();
-            activeCubes.Remove(cube);
-            Destroy(cube.gameObject);
+            // 충격 강도 측정
+            float hitVelocity = GetControllerVelocity(hitController);
+            HitStrength strength = GetHitStrength(hitVelocity);
+            
+            Debug.Log($"Hit velocity: {hitVelocity:F2} m/s - Strength: {strength}");
+            
+            // 충격 강도에 따른 처리
+            switch (strength)
+            {
+                case HitStrength.TooWeak:
+                    Debug.Log("Hit too weak! Try harder!");
+                    PlayWeakHitSound();
+                    // 큐브는 파괴되지 않음
+                    break;
+                    
+                case HitStrength.Normal:
+                    Score++;
+                    Debug.Log($"Good hit! Score: {Score}");
+                    PlayDestroySound();
+                    activeCubes.Remove(cube);
+                    Destroy(cube.gameObject);
+                    break;
+                    
+                case HitStrength.Strong:
+                    Score += 2; // 강한 충격은 2점
+                    Debug.Log($"Excellent hit! Score: {Score} (+2 points)");
+                    PlayStrongHitSound();
+                    activeCubes.Remove(cube);
+                    Destroy(cube.gameObject);
+                    break;
+            }
         }
         else
         {
             Debug.Log("Hit by wrong controller!");
             PlayWrongSound();
         }
+    }
+    
+    private float GetControllerVelocity(Collider hitController)
+    {
+        // 실시간 위치 기록으로 속도 계산
+        Queue<Vector3> positions = null;
+        string controllerType = "";
         
-        // 큐브 제거
+        if (hitController == LeftController && LeftControllerTransform != null)
+        {
+            positions = leftControllerPositions;
+            controllerType = "Left";
+        }
+        else if (hitController == RightController && RightControllerTransform != null)
+        {
+            positions = rightControllerPositions;
+            controllerType = "Right";
+        }
+        else
+        {
+            Debug.LogWarning("Controller mapping issue - returning default velocity");
+            return 0f;
+        }
+        
+        if (positions != null && positions.Count >= 2)
+        {
+            // 최근 2개 위치로 속도 계산
+            Vector3[] posArray = positions.ToArray();
+            float[] timeArray = positionTimes.ToArray();
+            
+            int count = posArray.Length;
+            Vector3 currentPos = posArray[count - 1];
+            Vector3 prevPos = posArray[count - 2];
+            float currentTime = timeArray[count - 1];
+            float prevTime = timeArray[count - 2];
+            
+            Vector3 deltaPosition = currentPos - prevPos;
+            float deltaTime = currentTime - prevTime;
+            float velocity = deltaPosition.magnitude / deltaTime;
+            
+            Debug.Log($"{controllerType} Controller Velocity: {velocity:F2} m/s");
+            
+            return velocity;
+        }
+        else
+        {
+            Debug.LogWarning("Not enough position data for velocity calculation");
+            return 0f;
+        }
+    }
+    
+    private HitStrength GetHitStrength(float velocity)
+    {
+        if (velocity < MinHitVelocity)
+        {
+            return HitStrength.TooWeak;
+        }
+        else if (velocity >= StrongHitVelocity)
+        {
+            return HitStrength.Strong;
+        }
+        else
+        {
+            return HitStrength.Normal;
+        }
+    }
+    
+    // 충격 강도 열거형
+    public enum HitStrength
+    {
+        TooWeak,    // 너무 약함 - 실패
+        Normal,     // 보통 - 1점
+        Strong      // 강함 - 2점
     }
     
     public bool IsCorrectController(bool isLeftCube, Collider hitController)
@@ -165,6 +311,22 @@ public class BoxingManager : MonoBehaviour
         if (WrongAudio != null && audioSource != null)
         {
             audioSource.PlayOneShot(WrongAudio);
+        }
+    }
+    
+    public void PlayWeakHitSound()
+    {
+        if (WeakHitAudio != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(WeakHitAudio);
+        }
+    }
+    
+    public void PlayStrongHitSound()
+    {
+        if (StrongHitAudio != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(StrongHitAudio);
         }
     }
 }

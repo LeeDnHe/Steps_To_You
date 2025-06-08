@@ -66,9 +66,8 @@ public class BoxingCube : MonoBehaviour
             hasBeenHit = true;
             bool isCorrectController = manager.IsCorrectController(isLeftCube, other);
             
-            manager.OnCubeHit(this, isCorrectController);
-            
-            Debug.Log($"{(isLeftCube ? "Left" : "Right")} cube hit by {other.name} - {(isCorrectController ? "CORRECT" : "WRONG")}");
+            // hitController 정보도 함께 전달
+            manager.OnCubeHit(this, isCorrectController, other);
         }
     }
 } 
