@@ -2,12 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
+using TMPro;
 
 public class BoxingManager : MonoBehaviour
 {
     [Header("Cube Prefabs")]
     public GameObject LeftCube;
     public GameObject RightCube;
+    public GameObject ForbiddenCube; // 치면 안 되는 오브젝트
     
     [Header("Spawn Settings")]
     public Transform SpawnPoint;
@@ -26,17 +28,33 @@ public class BoxingManager : MonoBehaviour
     
     [Header("Hit Strength Settings")]
     public float MinHitVelocity = 2.0f; // 최소 충격 속도 (m/s)
-    public float StrongHitVelocity = 4.0f; // 강한 충격 속도 (m/s)
+    
+    [Header("UI Elements")]
+    public GameObject ComboUI; // 콤보 UI
+    public TextMeshProUGUI ComboText; // 콤보 텍스트
     
     [Header("Audio")]
     public AudioClip DestroyAudio; // 큐브가 사라질 때 재생할 오디오
     public AudioClip WrongAudio; // 틀린 컨트롤러와 충돌할 때 재생할 오디오
     public AudioClip WeakHitAudio; // 약한 충격일 때 재생할 오디오
-    public AudioClip StrongHitAudio; // 강한 충격일 때 재생할 오디오
+    public AudioClip ComboBreakAudio; // 콤보가 끊어질 때 재생할 오디오
+    public AudioClip ForbiddenHitAudio; // 금지 오브젝트를 쳤을 때 재생할 오디오
     
     [Header("Game Status")]
     public int Score = 0;
+    public int Combo = 0;
     public int SpawnedCount = 0;
+    
+    // 게임 페이즈 관련
+    private GamePhase currentPhase = GamePhase.Easy;
+    private float gameStartTime;
+    private bool isRestTime = false;
+    private bool gameStarted = false;
+    
+    // 페이즈별 설정값
+    private PhaseSettings easyPhase = new PhaseSettings(20f, 1.5f, 0.5f, 0.5f, 4f); // 20초, 1.5초 스폰, 0.5배속, 0.5배 범위
+    private PhaseSettings normalPhase = new PhaseSettings(60f, 1.0f, 1.0f, 1.0f, 4f); // 60초, 1초 스폰, 1배속, 1배 범위
+    private PhaseSettings hardPhase = new PhaseSettings(20f, 0.5f, 1.0f, 1.0f, 0f); // 20초, 0.5초 스폰, 1배속, 1배 범위
     
     private List<BoxingCube> activeCubes = new List<BoxingCube>();
     private AudioSource audioSource;
@@ -47,6 +65,35 @@ public class BoxingManager : MonoBehaviour
     private Queue<float> positionTimes = new Queue<float>();
     private int maxPositionHistory = 10; // 최대 10개의 위치 기록
     
+    // 게임 페이즈 열거형
+    public enum GamePhase
+    {
+        Easy,
+        Normal,
+        Hard,
+        Finished
+    }
+    
+    // 페이즈 설정 클래스
+    [System.Serializable]
+    public class PhaseSettings
+    {
+        public float duration;
+        public float spawnInterval;
+        public float speedMultiplier;
+        public float spawnRangeMultiplier;
+        public float restTime;
+        
+        public PhaseSettings(float dur, float spawn, float speed, float range, float rest)
+        {
+            duration = dur;
+            spawnInterval = spawn;
+            speedMultiplier = speed;
+            spawnRangeMultiplier = range;
+            restTime = rest;
+        }
+    }
+    
     void Start()
     {
         // AudioSource 컴포넌트 가져오기 또는 추가
@@ -56,7 +103,83 @@ public class BoxingManager : MonoBehaviour
             audioSource = gameObject.AddComponent<AudioSource>();
         }
         
+        // 게임 초기화
+        InitializeGame();
+    }
+    
+    void InitializeGame()
+    {
+        gameStartTime = Time.time;
+        currentPhase = GamePhase.Easy;
+        gameStarted = true;
+        
+        // 콤보 UI 초기화
+        UpdateComboUI();
+        
+        // 첫 번째 페이즈 시작
+        StartCoroutine(GamePhaseManager());
         StartCoroutine(SpawnCubes());
+        
+        Debug.Log("=== Game Started - Easy Phase ===");
+    }
+    
+    IEnumerator GamePhaseManager()
+    {
+        while (currentPhase != GamePhase.Finished)
+        {
+            PhaseSettings currentSettings = GetCurrentPhaseSettings();
+            
+            // 현재 페이즈 실행
+            yield return new WaitForSeconds(currentSettings.duration);
+            
+            // 휴식 시간
+            if (currentSettings.restTime > 0)
+            {
+                isRestTime = true;
+                Debug.Log($"=== Rest Time: {currentSettings.restTime} seconds ===");
+                yield return new WaitForSeconds(currentSettings.restTime);
+                isRestTime = false;
+            }
+            
+            // 다음 페이즈로 전환
+            TransitionToNextPhase();
+        }
+        
+        Debug.Log("=== Game Finished ===");
+    }
+    
+    void TransitionToNextPhase()
+    {
+        switch (currentPhase)
+        {
+            case GamePhase.Easy:
+                currentPhase = GamePhase.Normal;
+                Debug.Log("=== Transition to Normal Phase ===");
+                break;
+            case GamePhase.Normal:
+                currentPhase = GamePhase.Hard;
+                Debug.Log("=== Transition to Hard Phase ===");
+                break;
+            case GamePhase.Hard:
+                currentPhase = GamePhase.Finished;
+                Debug.Log("=== Game Completed ===");
+                break;
+        }
+    }
+    
+    PhaseSettings GetCurrentPhaseSettings()
+    {
+        switch (currentPhase)
+        {
+            case GamePhase.Easy:
+                return easyPhase;
+            case GamePhase.Normal:
+                return normalPhase;
+            case GamePhase.Hard:
+                return hardPhase;
+            default:
+                return normalPhase;
+        }
     }
     
     void Update()
@@ -105,28 +228,49 @@ public class BoxingManager : MonoBehaviour
     
     IEnumerator SpawnCubes()
     {
-        while (SpawnedCount < TotalCubes)
+        while (currentPhase != GamePhase.Finished && gameStarted)
         {
-            SpawnRandomCube();
-            SpawnedCount++;
+            // 휴식 시간 중에는 스폰하지 않음
+            if (!isRestTime)
+            {
+                SpawnRandomCube();
+                SpawnedCount++;
+            }
             
-            yield return new WaitForSeconds(SpawnInterval);
+            // 현재 페이즈에 따른 스폰 간격
+            PhaseSettings currentSettings = GetCurrentPhaseSettings();
+            yield return new WaitForSeconds(currentSettings.spawnInterval);
         }
-        
     }
     
     void SpawnRandomCube()
     {
-        // 랜덤하게 Left 또는 Right 큐브 선택
-        bool isLeftCube = Random.Range(0, 2) == 0;
-        GameObject cubeToSpawn = isLeftCube ? LeftCube : RightCube;
+        // 1/20 확률로 금지 오브젝트 스폰
+        bool isForbiddenCube = Random.Range(0, 20) == 0;
+        GameObject cubeToSpawn;
+        bool isLeftCube = false;
+        
+        if (isForbiddenCube && ForbiddenCube != null)
+        {
+            cubeToSpawn = ForbiddenCube;
+        }
+        else
+        {
+            // 랜덤하게 Left 또는 Right 큐브 선택
+            isLeftCube = Random.Range(0, 2) == 0;
+            cubeToSpawn = isLeftCube ? LeftCube : RightCube;
+        }
         
         if (cubeToSpawn == null || SpawnPoint == null) return;
         
-        // 스폰 포인트 기준 XY -0.5 ~ 0.5 정사각형에서 랜덤 위치
+        // 현재 페이즈에 따른 스폰 범위
+        PhaseSettings currentSettings = GetCurrentPhaseSettings();
+        float spawnRange = 0.5f * currentSettings.spawnRangeMultiplier;
+        
+        // 스폰 포인트 기준 XY 범위에서 랜덤 위치
         Vector3 randomOffset = new Vector3(
-            Random.Range(-0.5f, 0.5f),
-            Random.Range(-0.5f, 0.5f),
+            Random.Range(-spawnRange, spawnRange),
+            Random.Range(-spawnRange, spawnRange),
             0f
         );
         
@@ -142,18 +286,22 @@ public class BoxingManager : MonoBehaviour
             boxingCube = spawnedCube.AddComponent<BoxingCube>();
         }
         
-        boxingCube.Initialize(this, isLeftCube);
+        boxingCube.Initialize(this, isLeftCube, isForbiddenCube);
         activeCubes.Add(boxingCube);
     }
     
     void MoveCubes()
     {
+        // 현재 페이즈에 따른 이동 속도
+        PhaseSettings currentSettings = GetCurrentPhaseSettings();
+        float currentSpeed = MoveSpeed * currentSettings.speedMultiplier;
+        
         for (int i = activeCubes.Count - 1; i >= 0; i--)
         {
             if (activeCubes[i] != null)
             {
                 // -Z 방향으로 이동 (플레이어 쪽으로)
-                activeCubes[i].transform.Translate(Vector3.back * MoveSpeed * Time.deltaTime);
+                activeCubes[i].transform.Translate(Vector3.back * currentSpeed * Time.deltaTime);
             }
         }
     }
@@ -172,43 +320,47 @@ public class BoxingManager : MonoBehaviour
     
     public void OnCubeHit(BoxingCube cube, bool hitByCorrectController, Collider hitController)
     {
+        // 금지 오브젝트를 쳤을 때
+        if (cube.IsForbiddenCube)
+        {
+            Debug.Log("Forbidden cube hit! Combo broken!");
+            ResetCombo();
+            PlayForbiddenHitSound();
+            activeCubes.Remove(cube);
+            Destroy(cube.gameObject);
+            return;
+        }
+        
         if (hitByCorrectController)
         {
             // 충격 강도 측정
             float hitVelocity = GetControllerVelocity(hitController);
-            HitStrength strength = GetHitStrength(hitVelocity);
             
-            Debug.Log($"Hit velocity: {hitVelocity:F2} m/s - Strength: {strength}");
+            Debug.Log($"Hit velocity: {hitVelocity:F2} m/s");
             
             // 충격 강도에 따른 처리
-            switch (strength)
+            if (hitVelocity < MinHitVelocity)
             {
-                case HitStrength.TooWeak:
-                    Debug.Log("Hit too weak! Try harder!");
-                    PlayWeakHitSound();
-                    // 큐브는 파괴되지 않음
-                    break;
-                    
-                case HitStrength.Normal:
-                    Score++;
-                    Debug.Log($"Good hit! Score: {Score}");
-                    PlayDestroySound();
-                    activeCubes.Remove(cube);
-                    Destroy(cube.gameObject);
-                    break;
-                    
-                case HitStrength.Strong:
-                    Score += 2; // 강한 충격은 2점
-                    Debug.Log($"Excellent hit! Score: {Score} (+2 points)");
-                    PlayStrongHitSound();
-                    activeCubes.Remove(cube);
-                    Destroy(cube.gameObject);
-                    break;
+                Debug.Log("Hit too weak! Try harder!");
+                ResetCombo();
+                PlayWeakHitSound();
+                // 큐브는 파괴되지 않음
+            }
+            else
+            {
+                Score++;
+                Combo++;
+                Debug.Log($"Good hit! Score: {Score}, Combo: {Combo}");
+                PlayDestroySound();
+                UpdateComboUI();
+                activeCubes.Remove(cube);
+                Destroy(cube.gameObject);
             }
         }
         else
         {
-            Debug.Log("Hit by wrong controller!");
+            Debug.Log("Hit by wrong controller! Combo broken!");
+            ResetCombo();
             PlayWrongSound();
         }
     }
@@ -262,29 +414,7 @@ public class BoxingManager : MonoBehaviour
         }
     }
     
-    private HitStrength GetHitStrength(float velocity)
-    {
-        if (velocity < MinHitVelocity)
-        {
-            return HitStrength.TooWeak;
-        }
-        else if (velocity >= StrongHitVelocity)
-        {
-            return HitStrength.Strong;
-        }
-        else
-        {
-            return HitStrength.Normal;
-        }
-    }
-    
-    // 충격 강도 열거형
-    public enum HitStrength
-    {
-        TooWeak,    // 너무 약함 - 실패
-        Normal,     // 보통 - 1점
-        Strong      // 강함 - 2점
-    }
+
     
     public bool IsCorrectController(bool isLeftCube, Collider hitController)
     {
@@ -322,11 +452,60 @@ public class BoxingManager : MonoBehaviour
         }
     }
     
-    public void PlayStrongHitSound()
+
+    
+    public void PlayComboBreakSound()
     {
-        if (StrongHitAudio != null && audioSource != null)
+        if (ComboBreakAudio != null && audioSource != null)
         {
-            audioSource.PlayOneShot(StrongHitAudio);
+            audioSource.PlayOneShot(ComboBreakAudio);
         }
+    }
+    
+    public void PlayForbiddenHitSound()
+    {
+        if (ForbiddenHitAudio != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(ForbiddenHitAudio);
+        }
+    }
+    
+    // 콤보 관련 메서드들
+    void UpdateComboUI()
+    {
+        if (ComboText != null)
+        {
+            ComboText.text = $"Combo: {Combo}";
+        }
+        
+        // ComboUI는 항상 활성화 상태로 유지하고, 콤보가 0일 때는 텍스트만 "Combo: 0"으로 표시
+        if (ComboUI != null && !ComboUI.activeInHierarchy)
+        {
+            ComboUI.SetActive(true);
+        }
+    }
+    
+    void ResetCombo()
+    {
+        if (Combo > 0)
+        {
+            Combo = 0;
+            UpdateComboUI();
+            PlayComboBreakSound();
+            Debug.Log("Combo Reset!");
+        }
+    }
+    
+    // 큐브가 놓쳤을 때 호출되는 메서드
+    public void OnCubeMissed(BoxingCube cube)
+    {
+        if (!cube.IsForbiddenCube) // 금지 오브젝트가 아닌 경우에만 콤보 초기화
+        {
+            Debug.Log("Cube missed! Combo broken!");
+            ResetCombo();
+        }
+        
+        activeCubes.Remove(cube);
+        Destroy(cube.gameObject);
     }
 }

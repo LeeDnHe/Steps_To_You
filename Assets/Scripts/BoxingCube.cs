@@ -7,15 +7,19 @@ public class BoxingCube : MonoBehaviour
 {
     private BoxingManager manager;
     private bool isLeftCube;
+    private bool isForbiddenCube;
     private bool hasBeenHit = false;
     
     [Header("Timer Settings")]
     public float LifeTime = 10f; // 큐브가 살아있을 시간 (초)
     
-    public void Initialize(BoxingManager boxingManager, bool isLeft)
+    public bool IsForbiddenCube => isForbiddenCube;
+    
+    public void Initialize(BoxingManager boxingManager, bool isLeft, bool isForbidden = false)
     {
         manager = boxingManager;
         isLeftCube = isLeft;
+        isForbiddenCube = isForbidden;
         
         // Collider가 Trigger인지 확인
         Collider cubeCollider = GetComponent<Collider>();
@@ -32,18 +36,16 @@ public class BoxingCube : MonoBehaviour
     {
         yield return new WaitForSeconds(LifeTime);
         
-        // 아직 파괴되지 않았다면 자동으로 파괴
+        // 아직 파괴되지 않았다면 놓친 것으로 처리
         if (this != null && !hasBeenHit)
         {
-            Debug.Log($"{(isLeftCube ? "Left" : "Right")} cube auto-destroyed after {LifeTime} seconds");
+            Debug.Log($"{(isForbiddenCube ? "Forbidden" : (isLeftCube ? "Left" : "Right"))} cube missed after {LifeTime} seconds");
             
-            // 시간 초과로 사라질 때도 DestroySound 재생
+            // 놓친 큐브로 처리 (콤보 초기화 등)
             if (manager != null)
             {
-                manager.PlayDestroySound();
+                manager.OnCubeMissed(this);
             }
-            
-            Destroy(gameObject);
         }
     }
     
@@ -51,12 +53,12 @@ public class BoxingCube : MonoBehaviour
     {
         if (hasBeenHit || manager == null) return;
         
-        // DestroyCollider와 충돌했을 때 큐브 파괴
+        // DestroyCollider와 충돌했을 때 놓친 큐브로 처리
         if (other == manager.DestroyCollider)
         {
-            Debug.Log($"{(isLeftCube ? "Left" : "Right")} cube destroyed by DestroyCollider");
+            Debug.Log($"{(isForbiddenCube ? "Forbidden" : (isLeftCube ? "Left" : "Right"))} cube missed by DestroyCollider");
             
-            Destroy(gameObject);
+            manager.OnCubeMissed(this);
             return;
         }
         
