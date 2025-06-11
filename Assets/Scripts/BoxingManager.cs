@@ -340,6 +340,7 @@ public class BoxingManager : MonoBehaviour
             
             // 충격 강도에 따른 처리
             if (hitVelocity < MinHitVelocity)
+
             {
                 Debug.Log("Hit too weak! Try harder!");
                 ResetCombo();
