@@ -16,11 +16,6 @@ public class PopupOpener : MonoBehaviour
     {
         // AudioSource 컴포넌트 가져오기 및 기본 재생
         audioSource = GetComponent<AudioSource>();
-        if (audioSource != null)
-        {
-            audioSource.loop = true; // 반복 재생
-            audioSource.Play();
-        }
         
         grabInteractable = GetComponent<XRGrabInteractable>();
         if (grabInteractable != null)
@@ -80,14 +75,10 @@ public class PopupOpener : MonoBehaviour
     // 버튼이 눌렸을 때 진동 실행
     public void TriggerVibration()
     {
-        // 왼쪽 컨트롤러 진동
-        if (leftControllerTransform != null)
+        // 바이브레이션 오디오 재생
+        if (audioSource != null)
         {
-            var controller = leftControllerTransform.GetComponent<XRBaseController>();
-            if (controller != null)
-            {
-                controller.SendHapticImpulse(0.5f, 0.2f); // 강도 0.5, 시간 0.2초
-            }
+            audioSource.Play();
         }
     }
 }

@@ -101,8 +101,8 @@ public class BoxingManager : MonoBehaviour
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
-        }
-        
+    }
+
         // 게임 초기화
         InitializeGame();
     }
