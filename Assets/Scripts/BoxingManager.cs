@@ -101,8 +101,8 @@ public class BoxingManager : MonoBehaviour
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
-        }
-        
+    }
+
         // 게임 초기화
         InitializeGame();
     }
@@ -340,6 +340,7 @@ public class BoxingManager : MonoBehaviour
             
             // 충격 강도에 따른 처리
             if (hitVelocity < MinHitVelocity)
+
             {
                 Debug.Log("Hit too weak! Try harder!");
                 ResetCombo();
