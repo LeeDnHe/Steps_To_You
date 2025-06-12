@@ -46,7 +46,7 @@ public class BoxingManager : MonoBehaviour
     public int SpawnedCount = 0;
     
     // 게임 페이즈 관련
-    private GamePhase currentPhase = GamePhase.Easy;
+    public GamePhase currentPhase = GamePhase.Easy;
     private float gameStartTime;
     private bool isRestTime = false;
     private bool gameStarted = false;
@@ -111,10 +111,20 @@ public class BoxingManager : MonoBehaviour
     {
         gameStartTime = Time.time;
         currentPhase = GamePhase.Easy;
-        gameStarted = true;
+        gameStarted = false; // TTS에서 제어하도록 변경
         
         // 콤보 UI 초기화
         UpdateComboUI();
+        
+        Debug.Log("=== Game Initialized - Waiting for TTS ===");
+    }
+    
+    /// <summary>
+    /// BoxingTTSManager에서 호출하는 게임 시작 메서드
+    /// </summary>
+    public void StartGame()
+    {
+        gameStarted = true;
         
         // 첫 번째 페이즈 시작
         StartCoroutine(GamePhaseManager());
@@ -349,9 +359,26 @@ public class BoxingManager : MonoBehaviour
             }
             else
             {
-                Score++;
+                // 콤보에 따른 점수 계산 방식 변경
                 Combo++;
-                Debug.Log($"Good hit! Score: {Score}, Combo: {Combo}");
+                
+                // 콤보에 따른 점수 추가
+                if (Combo >= 20)
+                {
+                    Score += 3;
+                    Debug.Log($"Excellent hit! (+3 points) Score: {Score}, Combo: {Combo}");
+                }
+                else if (Combo >= 5)
+                {
+                    Score += 2;
+                    Debug.Log($"Great hit! (+2 points) Score: {Score}, Combo: {Combo}");
+                }
+                else
+                {
+                    Score += 1;
+                    Debug.Log($"Good hit! (+1 point) Score: {Score}, Combo: {Combo}");
+                }
+                
                 PlayDestroySound();
                 UpdateComboUI();
                 activeCubes.Remove(cube);
