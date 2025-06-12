@@ -6,7 +6,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     public GameManager main;
-    public string path;
+    public string path = "playerStats.dat"; //임시 경로
     public Stat gameStat;
     
     void Awake() { //non-lazy, DDOL
