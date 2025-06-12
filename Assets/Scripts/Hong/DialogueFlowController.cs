@@ -96,7 +96,7 @@ public class DialogueFlowController : MonoBehaviour
         // 🔥 1초 기다림
         yield return new WaitForSeconds(1f);
 
-        // 🔥 챕터2 오브젝트 활성화 → OnEnable() → 대사 자동 시작
+        // 🔥 두번째 씬 오브젝트 활성화 → OnEnable() → 대사 자동 시작
         if (DialogueFlowController2 != null)
         {
             DialogueFlowController2.SetActive(true);
