@@ -159,6 +159,11 @@ MonoBehaviour:
   popup_10: {fileID: 968763782}
   popup_15: {fileID: 716953761}
   popup_20: {fileID: 1968274302}
+  panel1: {fileID: 954506289}
+  panel2: {fileID: 1124889814}
+  panel3: {fileID: 1819097668}
+  panel21: {fileID: 1347548064}
+  panel22: {fileID: 1139596475}
 --- !u!4 &28349129
 Transform:
   m_ObjectHideFlags: 0
