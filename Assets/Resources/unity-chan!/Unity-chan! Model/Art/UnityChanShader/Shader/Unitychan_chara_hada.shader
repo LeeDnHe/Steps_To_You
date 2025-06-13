@@ -1,54 +1,55 @@
 Shader "UnityChan/Skin"
 {
-	Properties
-	{
-		_Color ("Main Color", Color) = (1, 1, 1, 1)
-		_ShadowColor ("Shadow Color", Color) = (0.8, 0.8, 1, 1)
-		_EdgeThickness ("Outline Thickness", Float) = 1
-				
-		_MainTex ("Diffuse", 2D) = "white" {}
-		_FalloffSampler ("Falloff Control", 2D) = "white" {}
-		_RimLightSampler ("RimLight Control", 2D) = "white" {}
-	}
+    Properties
+    {
+        _Color ("Main Color", Color) = (1, 1, 1, 1)
+        _ShadowColor ("Shadow Color", Color) = (0.8, 0.8, 1, 1)
+        _EdgeThickness ("Outline Thickness", Float) = 1
 
-	SubShader
-	{
-		Tags
-		{
-			"RenderType"="Opaque"
-			"Queue"="Geometry"
-			"LightMode"="ForwardBase"
-		}
+        _MainTex ("Diffuse", 2D) = "white" {}
+        _FalloffSampler ("Falloff Control", 2D) = "white" {}
+        _RimLightSampler ("RimLight Control", 2D) = "white" {}
+    }
 
-		Pass
-		{
-			Cull Back
-			ZTest LEqual
-CGPROGRAM
-#pragma multi_compile_fwdbase
-#pragma target 3.0
-#pragma vertex vert
-#pragma fragment frag
-#include "UnityCG.cginc"
-#include "AutoLight.cginc"
-#include "CharaSkin.cg"
-ENDCG
-		}
+    SubShader
+    {
+        Tags
+        {
+            "RenderPipeline"="UniversalPipeline"
+            "RenderType"="Opaque"
+            "Queue"="Geometry"
+            "LightMode"="UniversalForward"
+        }
 
-		Pass
-		{
-			Cull Front
-			ZTest Less
-CGPROGRAM
-#pragma target 3.0
-#pragma vertex vert
-#pragma fragment frag
-#include "UnityCG.cginc"
-#include "CharaOutline.cg"
-ENDCG
-		}
+        HLSLINCLUDE
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        ENDHLSL
 
-	}
+        Pass
+        {
+            Cull Back
+            ZTest LEqual
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "CharaSkin.cg"
+            ENDHLSL
+        }
 
-	FallBack "Transparent/Cutout/Diffuse"
+        Pass
+        {
+            Cull Front
+            ZTest Less
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex vert
+            #pragma fragment frag
+            #include "CharaOutline.cg"
+            ENDHLSL
+        }
+
+    }
+
+    FallBack "Transparent/Cutout/Diffuse"
 }

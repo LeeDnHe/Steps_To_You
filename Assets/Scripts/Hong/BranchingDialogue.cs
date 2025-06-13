@@ -3,8 +3,8 @@ using TMPro;
 
 public class BranchingDialogue : MonoBehaviour
 {
-    public GameObject affectionTextObj;
-    public TextMeshProUGUI affectionText;
+    /*public GameObject affectionTextObj;
+    public TextMeshProUGUI affectionText;*/
     public GameObject currentPanel;
 
     private int affection = 0;
@@ -17,8 +17,6 @@ public class BranchingDialogue : MonoBehaviour
 
     public void OnChoiceButtonClicked(GameObject nextPanel, int affectionChange)
     {
-        affection += affectionChange;
-        ShowAffectionChange($"+{affectionChange}");
 
         // 이미지 띄우기
         switch (affectionChange)
@@ -85,7 +83,7 @@ public class BranchingDialogue : MonoBehaviour
             lastPopup.SetActive(false);
     }
 
-
+/*
     void ShowAffectionChange(string text)
     {
         affectionText.text = text;
@@ -97,4 +95,5 @@ public class BranchingDialogue : MonoBehaviour
     {
         affectionTextObj.SetActive(false);
     }
+    */
 }

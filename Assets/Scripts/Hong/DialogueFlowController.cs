@@ -18,24 +18,30 @@ public class DialogueFlowController : MonoBehaviour
 
     public GameObject DialogueFlowController2;
 
+    private bool isRunning = false; // 코루틴 중복 실행 방지
+
     void Start()
     {
-        StartCoroutine(RunDialogue());
+        if (!isRunning)
+        {
+            StartCoroutine(RunDialogue());
+        }
     }
 
     IEnumerator RunDialogue()
     {
-        yield return new WaitForSeconds(1f);
+        isRunning = true;
+        yield return new WaitForSecondsRealtime(1f);
 
         npcAudio.clip = npcLines[0]; // wav1
         npcAudio.Play();
         yield return new WaitUntil(() => !npcAudio.isPlaying);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         npcAudio.clip = npcLines[1]; // wav2
         npcAudio.Play();
         yield return new WaitUntil(() => !npcAudio.isPlaying);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         // 🔥 dialogueDesk UI 활성화
         dialogueDesk.SetActive(true);
@@ -45,12 +51,12 @@ public class DialogueFlowController : MonoBehaviour
 
         // 🔥 UI 비활성화
         dialogueDesk.SetActive(false);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         npcAudio.clip = npcLines[2]; // wav3
         npcAudio.Play();
         yield return new WaitUntil(() => !npcAudio.isPlaying);
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         NPCPanel.SetActive(true);
         yield return new WaitUntil(() => choiceFromPanel != -1); // 선택지 1 클릭 대기
@@ -62,7 +68,7 @@ public class DialogueFlowController : MonoBehaviour
             case 0: // 1번 선택 → wav4
                 npcAudio.clip = npcLines[3];
                 npcAudio.Play();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSecondsRealtime(0.5f);
                 break;
 
             case 1: // 2번 선택 → wav5 + 추가 선택
@@ -80,13 +86,13 @@ public class DialogueFlowController : MonoBehaviour
                     npcAudio.clip = npcLines[7]; // wav8
 
                 npcAudio.Play();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSecondsRealtime(0.5f);
                 break;
 
             case 2: // 3번 선택 → wav6
                 npcAudio.clip = npcLines[5];
                 npcAudio.Play();
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSecondsRealtime(0.5f);
                 break;
         }
 
@@ -94,7 +100,7 @@ public class DialogueFlowController : MonoBehaviour
         Debug.Log("대사 시퀀스 완료");
 
         // 🔥 1초 기다림
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSecondsRealtime(1f);
 
         // 🔥 두번째 씬 오브젝트 활성화 → OnEnable() → 대사 자동 시작
         if (DialogueFlowController2 != null)
@@ -102,6 +108,7 @@ public class DialogueFlowController : MonoBehaviour
             DialogueFlowController2.SetActive(true);
         }
 
+        isRunning = false;
     }
 
     // 🔻 UI 버튼 또는 Ray로 호출할 함수들

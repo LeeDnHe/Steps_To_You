@@ -540,9 +540,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ttsManager: {fileID: 1313078079744117806}
   boxingManager: {fileID: 79177520539994564}
+  xrOrigin: {fileID: 0}
   countdownPanel: {fileID: 9030852274766777934}
   countdownText: {fileID: 2559412743722023643}
   delayAfterPreGameTTS: 0.5
+  minScoreToWin: 100
+  gameOverPanel: {fileID: 0}
+  finalScoreText: {fileID: 0}
+  successPanel: {fileID: 0}
+  restartButton: {fileID: 0}
+  exitButton: {fileID: 0}
+  exitSceneName: BasicRoom
 --- !u!1 &5485692386149313530
 GameObject:
   m_ObjectHideFlags: 0
@@ -685,11 +693,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   audioSource: {fileID: 0}
-  preGameTTSList: []
-  easyPhaseTTSList: []
-  normalPhaseTTSList: []
-  hardPhaseTTSList: []
-  failureTTSList: []
+  preGameTTSList:
+  - {fileID: 8300000, guid: c96476609b4af4c209496005bf284d8c, type: 3}
+  - {fileID: 8300000, guid: 0542ad128e5514be8846426a32abe94b, type: 3}
+  - {fileID: 8300000, guid: 14ad530db63444e7a8105d6bfee9f961, type: 3}
+  - {fileID: 8300000, guid: 8175dd93f094b445f892d2d443b990d9, type: 3}
+  - {fileID: 8300000, guid: df8b332331a4f48f5b9b4f4269ea088d, type: 3}
+  - {fileID: 8300000, guid: 26f90785517384acfb7e7f56bb877a25, type: 3}
+  - {fileID: 8300000, guid: 3bfd3b91e04654c23a33b1757f4c789d, type: 3}
+  - {fileID: 8300000, guid: bcf6c8555e446475aa659370e6a2b26d, type: 3}
+  - {fileID: 8300000, guid: f1456cb06275e47438b9204e879c51e2, type: 3}
+  - {fileID: 8300000, guid: d6c9dfe241c2e4d26aee9871ed79dd5b, type: 3}
+  easyPhaseTTSList:
+  - {fileID: 8300000, guid: a0be5fd0405794ecaa8f473a35232472, type: 3}
+  - {fileID: 8300000, guid: 5be07b38c58964b25b30e533b84ae346, type: 3}
+  - {fileID: 8300000, guid: 2734d2b12b5884d29a50ab83614b3f9e, type: 3}
+  - {fileID: 8300000, guid: 88dcbcd4e7ba04d868d28bdf2bb6f290, type: 3}
+  normalPhaseTTSList:
+  - {fileID: 8300000, guid: 59f488079dec4441f861fe66c076c661, type: 3}
+  - {fileID: 8300000, guid: b10136d4fabd242f4986d77e945d5547, type: 3}
+  hardPhaseTTSList:
+  - {fileID: 8300000, guid: fd67086094c03499f889fc870e94a6d9, type: 3}
+  failureTTSList:
+  - {fileID: 8300000, guid: 47d177986138144708485d69cd1230e4, type: 3}
+  - {fileID: 8300000, guid: 10013ad3849fd41d688720df8a6bdbf9, type: 3}
   boxingManager: {fileID: 0}
   delayBetweenTTS: 0.5
 --- !u!1 &8294857033782983532

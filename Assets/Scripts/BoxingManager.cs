@@ -45,9 +45,13 @@ public class BoxingManager : MonoBehaviour
     public int Combo = 0;
     public int SpawnedCount = 0;
     
+    [Header("Game Manager Reference")]
+    public BoxingInitializer boxingInitializer; // BoxingInitializer 참조 추가
+    
     // 게임 페이즈 관련
     public GamePhase currentPhase = GamePhase.Easy;
     private float gameStartTime;
+    private float phaseStartTime; // 현재 페이즈 시작 시간
     private bool isRestTime = false;
     private bool gameStarted = false;
     
@@ -125,6 +129,10 @@ public class BoxingManager : MonoBehaviour
     public void StartGame()
     {
         gameStarted = true;
+        phaseStartTime = Time.time; // 페이즈 시작 시간 기록
+        
+        // 콤보 UI 초기화
+        UpdateComboUI();
         
         // 첫 번째 페이즈 시작
         StartCoroutine(GamePhaseManager());
@@ -156,10 +164,18 @@ public class BoxingManager : MonoBehaviour
         }
         
         Debug.Log("=== Game Finished ===");
+        
+        // BoxingInitializer의 EndGame 호출
+        if (boxingInitializer != null)
+        {
+            boxingInitializer.EndGame();
+        }
     }
     
     void TransitionToNextPhase()
     {
+        phaseStartTime = Time.time; // 새 페이즈 시작 시간 기록
+        
         switch (currentPhase)
         {
             case GamePhase.Easy:
@@ -535,5 +551,21 @@ public class BoxingManager : MonoBehaviour
         
         activeCubes.Remove(cube);
         Destroy(cube.gameObject);
+    }
+    
+    /// <summary>
+    /// 현재 페이즈의 남은 시간을 반환
+    /// </summary>
+    /// <returns>남은 시간 (초)</returns>
+    public float GetRemainingPhaseTime()
+    {
+        if (!gameStarted || currentPhase == GamePhase.Finished)
+            return 0f;
+            
+        PhaseSettings currentSettings = GetCurrentPhaseSettings();
+        float elapsedTime = Time.time - phaseStartTime;
+        float remainingTime = currentSettings.duration - elapsedTime;
+        
+        return Mathf.Max(0f, remainingTime);
     }
 }

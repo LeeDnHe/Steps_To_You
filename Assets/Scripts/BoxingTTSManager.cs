@@ -28,14 +28,18 @@ public class BoxingTTSManager : MonoBehaviour
     void Start()
     {
         // AudioSource 초기화
+        Debug.Log("BoxingTTSManager Start() called");
         if (audioSource == null)
         {
+            Debug.Log("AudioSource is null, trying to get component");
             audioSource = GetComponent<AudioSource>();
             if (audioSource == null)
             {
+                Debug.Log("No AudioSource component found, adding one");
                 audioSource = gameObject.AddComponent<AudioSource>();
             }
         }
+        Debug.Log($"AudioSource initialized: {audioSource != null}");
         
         Debug.Log("BoxingTTSManager initialized - waiting for external trigger");
     }
@@ -46,6 +50,30 @@ public class BoxingTTSManager : MonoBehaviour
     /// <param name="onComplete">완료 시 호출할 콜백</param>
     public void StartPreGameTTS(System.Action onComplete = null)
     {
+        Debug.Log($"StartPreGameTTS called - preGameTTSList.Count: {preGameTTSList.Count}");
+        
+        // AudioSource 재확인 및 초기화
+        if (audioSource == null)
+        {
+            Debug.Log("AudioSource is null in StartPreGameTTS, trying to initialize");
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                Debug.Log("Creating new AudioSource component");
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+        }
+        
+        Debug.Log($"AudioSource null? {audioSource == null}");
+        Debug.Log($"GameObject active? {gameObject.activeInHierarchy}");
+        
+        // 오브젝트가 비활성화되어 있으면 활성화
+        if (!gameObject.activeInHierarchy)
+        {
+            Debug.Log("BoxingTTS 오브젝트가 비활성화되어 있어 활성화합니다.");
+            gameObject.SetActive(true);
+        }
+        
         if (preGameTTSList.Count > 0)
         {
             Debug.Log("Starting Pre-Game TTS");
@@ -110,44 +138,40 @@ public class BoxingTTSManager : MonoBehaviour
     }
     
     /// <summary>
-    /// TTS 시퀀스를 순차적으로 재생하는 코루틴
+    /// TTS 시퀀스 재생
     /// </summary>
-    /// <param name="ttsClips">재생할 TTS 클립 리스트</param>
-    /// <param name="onComplete">완료 시 호출할 콜백</param>
-    /// <returns></returns>
-    private IEnumerator PlayTTSSequence(List<AudioClip> ttsClips, System.Action onComplete)
+    IEnumerator PlayTTSSequence(List<AudioClip> ttsClips, System.Action onComplete = null)
     {
-        isPlayingTTS = true;
+        Debug.Log($"Starting TTS sequence with {ttsClips.Count} clips");
         
-        for (int i = 0; i < ttsClips.Count; i++)
+        foreach (AudioClip clip in ttsClips)
         {
-            AudioClip clip = ttsClips[i];
             if (clip != null && audioSource != null)
             {
-                Debug.Log($"Playing TTS clip {i + 1}/{ttsClips.Count}: {clip.name}");
-                
-                // 오디오 재생
+                Debug.Log($"Playing TTS clip: {clip.name}");
                 audioSource.clip = clip;
                 audioSource.Play();
                 
-                // 오디오가 끝날 때까지 대기
+                // 클립 재생 완료까지 대기
                 yield return new WaitForSeconds(clip.length);
-                
-                // 다음 오디오 재생 전 0.5초 대기 (마지막 클립이 아닌 경우)
-                if (i < ttsClips.Count - 1)
-                {
-                    yield return new WaitForSeconds(delayBetweenTTS);
-                }
+            }
+            else
+            {
+                Debug.LogWarning($"Skipping null clip or audioSource is null");
             }
         }
         
-        isPlayingTTS = false;
+        // 모든 TTS 재생 완료 후 AudioSource 비우기
+        if (audioSource != null)
+        {
+            audioSource.clip = null;
+            audioSource.Stop();
+            Debug.Log("AudioSource cleared after TTS sequence completion");
+        }
         
-        // 완료 콜백 호출
+        Debug.Log("TTS sequence completed");
         onComplete?.Invoke();
     }
-    
-
     
     /// <summary>
     /// 현재 재생 중인 TTS 중단
