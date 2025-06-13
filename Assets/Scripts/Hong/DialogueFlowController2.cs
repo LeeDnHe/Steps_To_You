@@ -9,6 +9,8 @@ public class DialogueFlowController2 : MonoBehaviour
     public GameObject dialogueGiveup1;
     public GameObject dialogueGiveup2;
     public GameObject dialogueJjo;
+    
+    public BoxingInitializer boxingInitializer; // 복싱 게임 초기화기 참조
 
     private bool closedGiveup1 = false;
     private bool closedGiveup2 = false;
@@ -16,6 +18,12 @@ public class DialogueFlowController2 : MonoBehaviour
 
     void OnEnable()
     {
+        // 복싱 게임 초기 비활성화
+        if (boxingInitializer != null)
+        {
+            boxingInitializer.gameObject.SetActive(false);
+        }
+        
         StartCoroutine(RunDialogue());
     }
 
@@ -63,6 +71,26 @@ public class DialogueFlowController2 : MonoBehaviour
         yield return new WaitUntil(() => !npcAudio.isPlaying);
 
         Debug.Log("DialogueFlowController2 완료");
+        
+        // 1초 대기 후 복싱 게임 시작
+        yield return new WaitForSeconds(1f);
+        StartBoxingGame();
+    }
+    
+    /// <summary>
+    /// 복싱 게임 시작
+    /// </summary>
+    private void StartBoxingGame()
+    {
+        if (boxingInitializer != null)
+        {
+            Debug.Log("복싱 게임 시작");
+            boxingInitializer.gameObject.SetActive(true);
+        }
+        else
+        {
+            Debug.LogError("BoxingInitializer가 할당되지 않았습니다!");
+        }
     }
 
     // 🔻 각 패널의 닫기 버튼에 연결

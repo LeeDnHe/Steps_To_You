@@ -12,6 +12,9 @@ public class PopupOpener : MonoBehaviour
     private XRGrabInteractable grabInteractable;
     private AudioSource audioSource;
 
+    private Vector3 originalPosition;
+    private Quaternion originalRotation;
+
     void Start()
     {
         // AudioSource 컴포넌트 가져오기 및 기본 재생
@@ -29,6 +32,9 @@ public class PopupOpener : MonoBehaviour
         {
             vibrateButton.onClick.AddListener(TriggerVibration);
         }
+
+        originalPosition = transform.position;
+        originalRotation = transform.rotation;
     }
 
     void Update()
@@ -69,7 +75,14 @@ public class PopupOpener : MonoBehaviour
         {
             grabInteractable.trackPosition = true;
             grabInteractable.trackRotation = true;
+            
+            // 그랩 기능 완전 비활성화 - 다시 잡을 수 없게 함
+            grabInteractable.enabled = false;
         }
+
+        // 원래 위치/회전으로 복귀
+        transform.position = originalPosition;
+        transform.rotation = originalRotation;
     }
     
     // 버튼이 눌렸을 때 진동 실행
