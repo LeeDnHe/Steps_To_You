@@ -5,6 +5,8 @@ public class PopupCloser : MonoBehaviour
     public GameObject popupPanel;
     public GameObject BoxUnityChan;
     public GameObject DialogueFlowController;
+    public Transform player; // 플레이어 Transform
+    public Transform initialPosition; // 플레이어의 초기 위치
 
     private bool isClosing = false; // 중복 실행 방지
 
@@ -54,5 +56,18 @@ public class PopupCloser : MonoBehaviour
     void ShowBoxUnityChan()
     {
         BoxUnityChan.SetActive(true);
+        
+        // 플레이어를 초기 위치로 이동
+        if (player != null && initialPosition != null)
+        {
+            Debug.Log("플레이어를 초기 위치로 이동: " + initialPosition.position);
+            player.position = initialPosition.position;
+            player.rotation = initialPosition.rotation;
+        }
+        else
+        {
+            if (player == null) Debug.LogWarning("Player Transform이 설정되지 않았습니다.");
+            if (initialPosition == null) Debug.LogWarning("Initial Position Transform이 설정되지 않았습니다.");
+        }
     }
 }
