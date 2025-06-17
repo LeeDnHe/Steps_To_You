@@ -7,6 +7,7 @@ public class PopupOpener : MonoBehaviour
     public GameObject popupPanel;
     public Transform leftControllerTransform;
     public Button vibrateButton; // 진동을 실행할 버튼
+    public VariousAudioController variousAudioController; // 오디오 관리 컨트롤러
     
     private bool isGrabbed = false;
     private XRGrabInteractable grabInteractable;
@@ -52,10 +53,16 @@ public class PopupOpener : MonoBehaviour
         popupPanel.SetActive(true);
         isGrabbed = true;
         
-        // 오디오 끄기
+        // 기존 오디오 정지
         if (audioSource != null)
         {
             audioSource.Stop();
+        }
+        
+        // VariousAudioController를 통해 메시지 팝업 시퀀스 재생
+        if (variousAudioController != null)
+        {
+            variousAudioController.PlayMessagePopupOpenSequence();
         }
         
         // XR Grab Interactable의 기본 추적 비활성화

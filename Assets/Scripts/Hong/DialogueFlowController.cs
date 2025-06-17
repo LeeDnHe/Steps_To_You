@@ -12,11 +12,13 @@ public class DialogueFlowController : MonoBehaviour
     public GameObject NPCPanel;     // 선택지 3개
     public GameObject NPCPanel2;    // 선택지 2개
 
+    public GameObject DialogueFlowController2;
+    
+    public VariousAudioController variousAudioController; // 오디오 관리 컨트롤러
+
     private bool playerClosedDialogue = false;
     private int choiceFromPanel = -1;
     private int choiceFromPanel2 = -1;
-
-    public GameObject DialogueFlowController2;
 
     private bool isRunning = false; // 코루틴 중복 실행 방지
 
@@ -46,6 +48,12 @@ public class DialogueFlowController : MonoBehaviour
         // 🔥 dialogueDesk UI 활성화
         dialogueDesk.SetActive(true);
 
+        // 대화 시작 사운드 재생
+        if (variousAudioController != null)
+        {
+            variousAudioController.PlayMessagePopupOpenSequence();
+        }
+
         // 🔥 닫기 버튼 누를 때까지 기다림
         yield return new WaitUntil(() => playerClosedDialogue);
 
@@ -58,6 +66,12 @@ public class DialogueFlowController : MonoBehaviour
         yield return new WaitUntil(() => !npcAudio.isPlaying);
         yield return new WaitForSecondsRealtime(0.5f);
 
+        // 선택지 등장 사운드 재생
+        if (variousAudioController != null)
+        {
+            variousAudioController.PlayChoiceAppear();
+        }
+        
         NPCPanel.SetActive(true);
         yield return new WaitUntil(() => choiceFromPanel != -1); // 선택지 1 클릭 대기
 
@@ -75,6 +89,12 @@ public class DialogueFlowController : MonoBehaviour
                 npcAudio.clip = npcLines[4];
                 npcAudio.Play();
                 yield return new WaitUntil(() => !npcAudio.isPlaying);
+
+                // 두 번째 선택지 등장 사운드 재생
+                if (variousAudioController != null)
+                {
+                    variousAudioController.PlayChoiceAppear();
+                }
 
                 NPCPanel2.SetActive(true);
                 yield return new WaitUntil(() => choiceFromPanel2 != -1);

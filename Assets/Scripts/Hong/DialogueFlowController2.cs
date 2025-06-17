@@ -11,6 +11,7 @@ public class DialogueFlowController2 : MonoBehaviour
     public GameObject dialogueJjo;
     
     public BoxingInitializer boxingInitializer; // 복싱 게임 초기화기 참조
+    public VariousAudioController variousAudioController; // 오디오 관리 컨트롤러
 
     private bool closedGiveup1 = false;
     private bool closedGiveup2 = false;
@@ -39,9 +40,22 @@ public class DialogueFlowController2 : MonoBehaviour
         yield return new WaitUntil(() => !npcAudio.isPlaying);
 
         yield return new WaitForSeconds(0.5f);
+        
+        // dialogueGiveup1 등장 사운드 재생
+        if (variousAudioController != null)
+        {
+            variousAudioController.PlayChoiceAppear();
+        }
+        
         dialogueGiveup1.SetActive(true);
         yield return new WaitUntil(() => closedGiveup1);
         dialogueGiveup1.SetActive(false);
+
+        // dialogueGiveup2 등장 사운드 재생
+        if (variousAudioController != null)
+        {
+            variousAudioController.PlayChoiceAppear();
+        }
 
         dialogueGiveup2.SetActive(true);
         yield return new WaitUntil(() => closedGiveup2);
@@ -55,6 +69,12 @@ public class DialogueFlowController2 : MonoBehaviour
         npcAudio.clip = npcLines[3]; // wav3
         npcAudio.Play();
         yield return new WaitUntil(() => !npcAudio.isPlaying);
+
+        // dialogueJjo 등장 사운드 재생
+        if (variousAudioController != null)
+        {
+            variousAudioController.PlayChoiceAppear();
+        }
 
         dialogueJjo.SetActive(true);
         yield return new WaitUntil(() => closedJjo);
