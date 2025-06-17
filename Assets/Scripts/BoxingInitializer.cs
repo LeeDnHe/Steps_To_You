@@ -32,6 +32,10 @@ public class BoxingInitializer : MonoBehaviour
     public GameObject heroineCharacter; // 여주인공 캐릭터
     public DialogueFlowControllerAfterGame dialogueController; // 대화 컨트롤러
     
+    [Header("Background Music Settings")]
+    public AudioSource backgroundMusicSource; // 배경음악용 오디오소스
+    public AudioClip backgroundMusicClip; // 배경음악 클립
+    
     // Game state
     private bool gameInitialized = false;
     private BoxingManager.GamePhase currentPhase = BoxingManager.GamePhase.Easy;
@@ -43,6 +47,25 @@ public class BoxingInitializer : MonoBehaviour
         {
             xrOrigin.position = transform.position;
             xrOrigin.rotation = transform.rotation;
+        }
+        
+        // 배경음악 AudioSource 초기화
+        if (backgroundMusicSource == null)
+        {
+            backgroundMusicSource = GetComponent<AudioSource>();
+            if (backgroundMusicSource == null)
+            {
+                backgroundMusicSource = gameObject.AddComponent<AudioSource>();
+            }
+        }
+        
+        // 배경음악 설정
+        if (backgroundMusicSource != null && backgroundMusicClip != null)
+        {
+            backgroundMusicSource.clip = backgroundMusicClip;
+            backgroundMusicSource.loop = true; // 반복 재생
+            backgroundMusicSource.playOnAwake = false; // 자동 재생 비활성화
+            Debug.Log("Background music initialized");
         }
         
         // 결과 패널 초기 비활성화
@@ -145,6 +168,9 @@ public class BoxingInitializer : MonoBehaviour
             boxingManager.ComboUI.SetActive(true);
             Debug.Log("Combo UI activated before countdown");
         }
+        
+        // 배경음악 시작 (5초 카운트다운과 함께)
+        StartBackgroundMusic();
         
         // 5부터 1까지 카운트다운
         for (int count = 5; count >= 1; count--)
@@ -257,7 +283,19 @@ public class BoxingInitializer : MonoBehaviour
         
         Debug.Log("=== Boxing Game Finished ===");
         
-        // 게임 종료 시 결과 처리
+        // 4초 후 게임 종료 결과 처리
+        StartCoroutine(HandleGameEndAfterDelay(4.0f));
+    }
+    
+    /// <summary>
+    /// 지연 시간 후 게임 종료 처리
+    /// </summary>
+    /// <param name="delay">지연 시간 (초)</param>
+    /// <returns></returns>
+    private IEnumerator HandleGameEndAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        
         if (boxingManager != null)
         {
             HandleGameEnd(boxingManager.Score);
@@ -270,6 +308,9 @@ public class BoxingInitializer : MonoBehaviour
     private void HandleGameEnd(int finalScore)
     {
         Debug.Log($"Game Over! \nFinal Score: {finalScore}");
+        
+        // 배경음악 정지 (성공/실패 관계없이)
+        StopBackgroundMusic();
         
         // 최소 점수 달성 여부에 따라 성공/실패 처리
         bool isSuccess = finalScore >= minScoreToWin;
@@ -288,8 +329,8 @@ public class BoxingInitializer : MonoBehaviour
                 countdownText.text = $"게임 성공!\n최종 점수: {finalScore}";
             }
             
-            // 2초 후 여주인공 캐릭터 배치 및 대화 시작
-            StartCoroutine(StartSuccessDialogueAfterDelay(2.0f));
+            // 4초 후 여주인공 캐릭터 배치 및 대화 시작
+            StartCoroutine(StartSuccessDialogueAfterDelay(4.0f));
         }
         else
         {
@@ -419,6 +460,9 @@ public class BoxingInitializer : MonoBehaviour
     {
         Debug.Log("Restarting Boxing Game");
         
+        // 배경음악 정지
+        StopBackgroundMusic();
+        
         // XR Origin 위치 재설정
         if (xrOrigin != null)
         {
@@ -463,6 +507,9 @@ public class BoxingInitializer : MonoBehaviour
     public void StopGame()
     {
         Debug.Log("Stopping Boxing Game");
+        
+        // 배경음악 정지
+        StopBackgroundMusic();
         
         StopAllCoroutines();
         
@@ -523,5 +570,33 @@ public class BoxingInitializer : MonoBehaviour
         
         // 게임 종료 후 5초 대기 후 게임 오버 패널 표시
         StartCoroutine(ShowGameOverPanelAfterDelay(5f));
+    }
+
+    /// <summary>
+    /// 배경음악 시작
+    /// </summary>
+    void StartBackgroundMusic()
+    {
+        if (backgroundMusicSource != null && backgroundMusicClip != null)
+        {
+            backgroundMusicSource.Play();
+            Debug.Log("Background music started");
+        }
+        else
+        {
+            Debug.LogWarning("Background music source or clip is missing");
+        }
+    }
+    
+    /// <summary>
+    /// 배경음악 정지
+    /// </summary>
+    void StopBackgroundMusic()
+    {
+        if (backgroundMusicSource != null && backgroundMusicSource.isPlaying)
+        {
+            backgroundMusicSource.Stop();
+            Debug.Log("Background music stopped");
+        }
     }
 } 
