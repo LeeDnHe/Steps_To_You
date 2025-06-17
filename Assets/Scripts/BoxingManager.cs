@@ -56,9 +56,9 @@ public class BoxingManager : MonoBehaviour
     private bool gameStarted = false;
     
     // 페이즈별 설정값
-    private PhaseSettings easyPhase = new PhaseSettings(20f, 1.5f, 0.5f, 0.5f, 4f); // 20초, 1.5초 스폰, 0.5배속, 0.5배 범위
-    private PhaseSettings normalPhase = new PhaseSettings(60f, 1.0f, 1.0f, 1.0f, 4f); // 60초, 1초 스폰, 1배속, 1배 범위
-    private PhaseSettings hardPhase = new PhaseSettings(20f, 0.5f, 1.0f, 1.0f, 0f); // 20초, 0.5초 스폰, 1배속, 1배 범위
+    private PhaseSettings easyPhase = new PhaseSettings(20f, 1.5f, 0.5f, 0.4f, 7f); // 20초, 1.5초 스폰, 0.5배속, 0.4배 범위
+    private PhaseSettings normalPhase = new PhaseSettings(60f, 1.0f, 1.0f, 0.8f, 4f); // 60초, 1초 스폰, 1배속, 0.8배 범위
+    private PhaseSettings hardPhase = new PhaseSettings(20f, 0.5f, 1.0f, 0.8f, 0f); // 20초, 0.5초 스폰, 1배속, 0.8배 범위
     
     private List<BoxingCube> activeCubes = new List<BoxingCube>();
     private AudioSource audioSource;
@@ -117,9 +117,6 @@ public class BoxingManager : MonoBehaviour
         currentPhase = GamePhase.Easy;
         gameStarted = false; // TTS에서 제어하도록 변경
         
-        // 콤보 UI 초기화
-        UpdateComboUI();
-        
         Debug.Log("=== Game Initialized - Waiting for TTS ===");
     }
     
@@ -130,9 +127,6 @@ public class BoxingManager : MonoBehaviour
     {
         gameStarted = true;
         phaseStartTime = Time.time; // 페이즈 시작 시간 기록
-        
-        // 콤보 UI 초기화
-        UpdateComboUI();
         
         // 첫 번째 페이즈 시작
         StartCoroutine(GamePhaseManager());
@@ -520,12 +514,6 @@ public class BoxingManager : MonoBehaviour
         if (ComboText != null)
         {
             ComboText.text = $"Combo: {Combo}";
-        }
-        
-        // ComboUI는 항상 활성화 상태로 유지하고, 콤보가 0일 때는 텍스트만 "Combo: 0"으로 표시
-        if (ComboUI != null && !ComboUI.activeInHierarchy)
-        {
-            ComboUI.SetActive(true);
         }
     }
     
