@@ -4,7 +4,7 @@ using System.Collections;
 public class DialogueFlowController2 : MonoBehaviour
 {
     public AudioSource npcAudio;
-    public AudioClip[] npcLines; // [0] ~ [5] : wav0 ~ wav5
+    public AudioClip[] npcLines; // [0] ~ [6] : wav0 ~ wav6
 
     public GameObject dialogueGiveup1;
     public GameObject dialogueGiveup2;
@@ -70,6 +70,10 @@ public class DialogueFlowController2 : MonoBehaviour
         npcAudio.Play();
         yield return new WaitUntil(() => !npcAudio.isPlaying);
 
+        npcAudio.clip = npcLines[4]; // wav4
+        npcAudio.Play();
+        yield return new WaitUntil(() => !npcAudio.isPlaying);
+
         // dialogueJjo 등장 사운드 재생
         if (variousAudioController != null)
         {
@@ -81,12 +85,12 @@ public class DialogueFlowController2 : MonoBehaviour
         dialogueJjo.SetActive(false);
 
         yield return new WaitForSeconds(0.5f);
-        npcAudio.clip = npcLines[4]; // wav4
+        npcAudio.clip = npcLines[5]; // wav5
         npcAudio.Play();
         yield return new WaitUntil(() => !npcAudio.isPlaying);
 
         yield return new WaitForSeconds(0.5f);
-        npcAudio.clip = npcLines[5]; // wav5
+        npcAudio.clip = npcLines[6]; // wav6
         npcAudio.Play();
         yield return new WaitUntil(() => !npcAudio.isPlaying);
 

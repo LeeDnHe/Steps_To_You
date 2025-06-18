@@ -21,12 +21,8 @@ public class BoxingInitializer : MonoBehaviour
     
     [Header("Game End Settings")]
     public int minScoreToWin = 100;
-    public GameObject gameOverPanel;
-    public TextMeshProUGUI finalScoreText;
     public GameObject successPanel;
-    public Button restartButton;
-    public Button exitButton;
-    public string exitSceneName = "MainRoom"; // 기본방 씬 이름
+    public TextMeshProUGUI finalScoreText;
     
     [Header("Success Dialogue Settings")]
     public GameObject heroineCharacter; // 여주인공 캐릭터
@@ -69,8 +65,6 @@ public class BoxingInitializer : MonoBehaviour
         }
         
         // 결과 패널 초기 비활성화
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(false);
         if (successPanel != null)
             successPanel.SetActive(false);
             
@@ -79,12 +73,6 @@ public class BoxingInitializer : MonoBehaviour
             heroineCharacter.SetActive(false);
         if (dialogueController != null)
             dialogueController.gameObject.SetActive(false);
-            
-        // 버튼 이벤트 등록
-        if (restartButton != null)
-            restartButton.onClick.AddListener(RestartGame);
-        if (exitButton != null)
-            exitButton.onClick.AddListener(ExitToMainRoom);
             
         InitializeBoxingGame();
     }
@@ -309,93 +297,60 @@ public class BoxingInitializer : MonoBehaviour
     {
         Debug.Log($"Game Over! \nFinal Score: {finalScore}");
         
-        // 배경음악 정지 (성공/실패 관계없이)
+        // 배경음악 정지
         StopBackgroundMusic();
         
-        // 최소 점수 달성 여부에 따라 성공/실패 처리
+        // 최소 점수 달성 여부 확인
         bool isSuccess = finalScore >= minScoreToWin;
         
-        if (isSuccess)
+        // DialogueFlowControllerAfterGame에 결과 전달 (필요시)
+        if (dialogueController != null)
         {
-            // 성공 시
-            if (successPanel != null)
-            {
-                successPanel.SetActive(true);
-            }
-     
-            // countdown 패널에 성공 결과 표시
-            if (countdownText != null)
+            // DialogueFlowControllerAfterGame에 성공/실패 정보를 전달하는 메서드가 있다면 여기서 호출
+            // dialogueController.SetGameResult(isSuccess, finalScore);
+        }
+        
+        // countdown 패널에 결과 표시
+        if (countdownText != null)
+        {
+            if (isSuccess)
             {
                 countdownText.text = $"게임 성공!\n최종 점수: {finalScore}";
             }
-            
-            // 4초 후 여주인공 캐릭터 배치 및 대화 시작
-            StartCoroutine(StartSuccessDialogueAfterDelay(4.0f));
-        }
-        else
-        {
-            // 실패 시
-            if (gameOverPanel != null)
-            {
-                // 5초 후 게임오버 패널 활성화
-                StartCoroutine(ShowGameOverPanelAfterDelay(5.0f));
-                
-                // 3초 후 실패 TTS 재생
-                StartCoroutine(PlayFailureTTSAfterDelay(3.0f));
-            }
-           
-            
-            // countdown 패널에 실패 결과 표시
-            if (countdownText != null)
+            else
             {
                 countdownText.text = $"게임 실패\n최종 점수: {finalScore}\n목표 점수: {minScoreToWin}";
             }
         }
+        
+        // 성공/실패 관계없이 4초 후 여주인공과 대화 시작
+        StartCoroutine(StartDialogueAfterDelay(4.0f));
     }
     
     /// <summary>
-    /// 지정된 시간 후 실패 TTS 재생
+    /// 결과 표시 후 여주인공 캐릭터 배치 및 대화 시작
     /// </summary>
     /// <param name="delay">지연 시간 (초)</param>
     /// <returns></returns>
-    private IEnumerator PlayFailureTTSAfterDelay(float delay)
+    private IEnumerator StartDialogueAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
         
-        if (ttsManager != null)
-        {
-            ttsManager.StartFailureTTS();
-        }
-    }
-    
-    /// <summary>
-    /// 지정된 시간 후 게임오버 패널 활성화
-    /// </summary>
-    /// <param name="delay">지연 시간 (초)</param>
-    /// <returns></returns>
-    private IEnumerator ShowGameOverPanelAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(true);
-        }
-    }
-    
-    /// <summary>
-    /// 성공 후 여주인공 캐릭터 배치 및 대화 시작
-    /// </summary>
-    /// <param name="delay">지연 시간 (초)</param>
-    /// <returns></returns>
-    private IEnumerator StartSuccessDialogueAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        
-        // 성공 패널 비활성화
+        // 결과 패널들 비활성화
         if (successPanel != null)
         {
             successPanel.SetActive(false);
+        }
+        
+        // 대화 컨트롤러에 게임 점수 전달
+        if (dialogueController != null)
+        {
+            var afterGameController = dialogueController.GetComponent<DialogueFlowControllerAfterGame>();
+            if (afterGameController != null && boxingManager != null)
+            {
+                afterGameController.SetGameScore(boxingManager.Score);
+                Debug.Log($"Game score {boxingManager.Score} passed to DialogueFlowControllerAfterGame");
+            }
         }
         
         // 여주인공 캐릭터 위치 설정 (플레이어 기준 x: -2, z: +2)
@@ -454,107 +409,6 @@ public class BoxingInitializer : MonoBehaviour
     }
     
     /// <summary>
-    /// 게임 재시작
-    /// </summary>
-    public void RestartGame()
-    {
-        Debug.Log("Restarting Boxing Game");
-        
-        // 배경음악 정지
-        StopBackgroundMusic();
-        
-        // XR Origin 위치 재설정
-        if (xrOrigin != null)
-        {
-            xrOrigin.position = transform.position;
-            xrOrigin.rotation = transform.rotation;
-        }
-        
-        // 현재 진행 중인 모든 코루틴 중단
-        StopAllCoroutines();
-        
-        // TTS 중단
-        if (ttsManager != null)
-        {
-            ttsManager.StopCurrentTTS();
-        }
-        
-        // 결과 패널 비활성화
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(false);
-        if (successPanel != null)
-            successPanel.SetActive(false);
-        
-        // 상태 초기화
-        gameInitialized = false;
-        currentPhase = BoxingManager.GamePhase.Easy;
-        
-        // 게임 스코어 리셋
-        if (boxingManager != null)
-        {
-            boxingManager.Score = 0;
-            boxingManager.Combo = 0;
-            boxingManager.SpawnedCount = 0;
-        }
-        
-        // 게임 재초기화
-        InitializeBoxingGame();
-    }
-    
-    /// <summary>
-    /// 게임 중단
-    /// </summary>
-    public void StopGame()
-    {
-        Debug.Log("Stopping Boxing Game");
-        
-        // 배경음악 정지
-        StopBackgroundMusic();
-        
-        StopAllCoroutines();
-        
-        if (ttsManager != null)
-        {
-            ttsManager.StopCurrentTTS();
-        }
-        
-        if (boxingManager != null)
-        {
-            // BoxingManager 중단 (필요시 BoxingManager에 StopGame 메서드 추가)
-        }
-        
-        if (countdownPanel != null)
-        {
-            countdownPanel.SetActive(false);
-        }
-    }
-    
-    /// <summary>
-    /// 현재 게임 상태 확인
-    /// </summary>
-    public bool IsGameInitialized()
-    {
-        return gameInitialized;
-    }
-    
-    /// <summary>
-    /// 현재 페이즈 확인
-    /// </summary>
-    public BoxingManager.GamePhase GetCurrentPhase()
-    {
-        return currentPhase;
-    }
-    
-    /// <summary>
-    /// 메인 룸으로 돌아가기
-    /// </summary>
-    public void ExitToMainRoom()
-    {
-        Debug.Log($"Exiting to scene: {exitSceneName}");
-        SceneManager.LoadScene(exitSceneName);
-    }
-    
-    /// <summary>
     /// 게임 종료 처리
     /// </summary>
     public void EndGame()
@@ -567,11 +421,8 @@ public class BoxingInitializer : MonoBehaviour
             boxingManager.ComboUI.SetActive(false);
             Debug.Log("Combo UI deactivated on game end");
         }
-        
-        // 게임 종료 후 5초 대기 후 게임 오버 패널 표시
-        StartCoroutine(ShowGameOverPanelAfterDelay(5f));
     }
-
+    
     /// <summary>
     /// 배경음악 시작
     /// </summary>

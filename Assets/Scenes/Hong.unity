@@ -1277,14 +1277,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npcAudio: {fileID: 301231734}
   npcLines:
-  - {fileID: 8300000, guid: 8e24f82857ffa4b7ca78826c7ccfaed4, type: 3}
-  - {fileID: 8300000, guid: 71e95ef9647cd4fbeadc67eda113f89e, type: 3}
-  - {fileID: 8300000, guid: 52fa67c0fb32c44cfb1b0dfc73c271d8, type: 3}
-  - {fileID: 8300000, guid: a2d531d8ba6814f0e9cfa2b4ff6ab2dc, type: 3}
-  - {fileID: 8300000, guid: e4b4d0dccad094a63a38135d1b4c02f8, type: 3}
-  - {fileID: 8300000, guid: bd61bf3e69de540428bbf7e9ac15ca63, type: 3}
-  - {fileID: 8300000, guid: a2d531d8ba6814f0e9cfa2b4ff6ab2dc, type: 3}
-  - {fileID: 8300000, guid: bd61bf3e69de540428bbf7e9ac15ca63, type: 3}
+  - {fileID: 8300000, guid: 3afb8af5b268e614b8ecbbd78c091c54, type: 3}
+  - {fileID: 8300000, guid: 8a2680fd63b6a014b8adccea622f31ea, type: 3}
+  - {fileID: 8300000, guid: 6e98d0b4e3320f148aa71fc6fdc202b3, type: 3}
+  - {fileID: 8300000, guid: bdcdb17747791d94198ad1e8049a9423, type: 3}
+  - {fileID: 8300000, guid: 807760bfcb6010948adcb65309d5e384, type: 3}
+  - {fileID: 8300000, guid: d4afd6100be1be44cb8f4bedf8a164bf, type: 3}
+  - {fileID: 8300000, guid: bdcdb17747791d94198ad1e8049a9423, type: 3}
+  - {fileID: 8300000, guid: d4afd6100be1be44cb8f4bedf8a164bf, type: 3}
   dialogueDesk: {fileID: 1259474565}
   NPCPanel: {fileID: 2024263759}
   NPCPanel2: {fileID: 1124889814}
@@ -1948,12 +1948,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   npcAudio: {fileID: 531470684}
   npcLines:
-  - {fileID: 8300000, guid: d63c5e667d5fc4155b57f4116ad963a8, type: 3}
-  - {fileID: 8300000, guid: 382d4e4c90e534657a45f8e05c2e855b, type: 3}
-  - {fileID: 8300000, guid: fb344b62cd7234c15a4982ffa7b1eaaa, type: 3}
-  - {fileID: 8300000, guid: 86cef9229ea4c46a78053b1f292c8526, type: 3}
-  - {fileID: 8300000, guid: 342247a20edf64c0b8ff745f4b0a5f57, type: 3}
-  - {fileID: 8300000, guid: d74f71a4988504d908aee90dfbf56daf, type: 3}
+  - {fileID: 8300000, guid: 741045350579c0545bb5581d6e37610f, type: 3}
+  - {fileID: 8300000, guid: 5bf7f9ef72025ca45917c86a5a68bf2f, type: 3}
+  - {fileID: 8300000, guid: 3240c090407bc7943bb1d750f1528fb1, type: 3}
+  - {fileID: 8300000, guid: db1960dfb4617ed46b69e69744d03d80, type: 3}
+  - {fileID: 8300000, guid: 56b9df828876d4148b904de227ed5f43, type: 3}
+  - {fileID: 8300000, guid: 3461cfe76513e494fae18ea4b954d56e, type: 3}
+  - {fileID: 8300000, guid: e7025d588ceea274bab2acf64aa51f3b, type: 3}
   dialogueGiveup1: {fileID: 918956608}
   dialogueGiveup2: {fileID: 1258864431}
   dialogueJjo: {fileID: 1149367565}
@@ -5572,6 +5573,86 @@ PrefabInstance:
       propertyPath: boxingManager
       value: 
       objectReference: {fileID: 1199484797}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: failureTTSList.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.size
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: failureTTSList.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: e2aa1830d7289bf459423d9f4cfb297d, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: 5b1494ca8ae81e346a92a79acfec1b3e, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: 0d7d6025553970d42bfa0c49136d56a4, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[2]
+      value: 
+      objectReference: {fileID: 8300000, guid: bdca2144f09e1904fb0ce5a2929e8dee, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[3]
+      value: 
+      objectReference: {fileID: 8300000, guid: ba8a530b55b1ef74e87659e0b4f203a8, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[4]
+      value: 
+      objectReference: {fileID: 8300000, guid: f08edac6d7316f64eaec48701cf6602a, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[5]
+      value: 
+      objectReference: {fileID: 8300000, guid: 4077f313d0c75b742b5db4b0c5372c60, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[6]
+      value: 
+      objectReference: {fileID: 8300000, guid: 889a2e14d3a5e8d44b4ae78b61bcbf58, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: preGameTTSList.Array.data[7]
+      value: 
+      objectReference: {fileID: 8300000, guid: e2622b5bac4f72f49b8fc68f4913d7ba, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: easyPhaseTTSList.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: 2e010dbe859627a45aef1a6c62fef482, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: easyPhaseTTSList.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: 1eb480a1fc48dbe43af4187db678a614, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: hardPhaseTTSList.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: 333bfd1377f294f478955f63d6c26ae9, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: normalPhaseTTSList.Array.data[0]
+      value: 
+      objectReference: {fileID: 8300000, guid: 5351900d0e042ab45a607de75a7295c5, type: 3}
+    - target: {fileID: 1313078079744117806, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      propertyPath: normalPhaseTTSList.Array.data[1]
+      value: 
+      objectReference: {fileID: 8300000, guid: e328317099e3fc943adc5067fa4bea28, type: 3}
     - target: {fileID: 2559412743722023643, guid: 5339ddca008078043afe5c89cbb6555f,
         type: 3}
       propertyPath: m_fontSize
@@ -8673,35 +8754,47 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23082743f3447af41966fd3583d70edd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  preChoiceTTSList:
-  - {fileID: 8300000, guid: 99e5b9023fe3d4e2595301478c1eca60, type: 3}
-  - {fileID: 8300000, guid: b3ffdcc2c7d63442ebe3634e50b8e5b6, type: 3}
-  - {fileID: 8300000, guid: ab97a60d5dce84bf6b2fceb9e005d774, type: 3}
-  - {fileID: 8300000, guid: 1f9de2b5acd39430a8d62be66bccf0cf, type: 3}
-  choice1TTSList:
-  - {fileID: 8300000, guid: 78d6a1e688019439c86a3206836404c9, type: 3}
-  choice2TTSList:
-  - {fileID: 8300000, guid: 25a535d9e9048464989c9259ae78e03a, type: 3}
-  - {fileID: 8300000, guid: 256bb77102d4a42dc857aa3b826331df, type: 3}
-  choice3TTSList:
-  - {fileID: 8300000, guid: abba08fb138a4460f8a96dd896b7440c, type: 3}
-  postChoiceTTSList:
-  - {fileID: 8300000, guid: 839c55165f2094ea2905dfcdd640d960, type: 3}
-  - {fileID: 8300000, guid: e3da73bb888074f17bb1e9a127e15f35, type: 3}
-  - {fileID: 8300000, guid: 26c6a98e94463460d8fc5df95a06de35, type: 3}
-  - {fileID: 8300000, guid: 03b751f6a4def47108f3df8c73ea9ab8, type: 3}
+  gameScore: 0
+  minScoreForSuccess: 100
+  successInitialTTSList:
+  - {fileID: 8300000, guid: 6080c30baebb85444b9973b7e3597249, type: 3}
+  failureInitialTTSList:
+  - {fileID: 8300000, guid: e2aa1830d7289bf459423d9f4cfb297d, type: 3}
+  intermediateTTSList:
+  - {fileID: 8300000, guid: a2825f449ebd3fc4d8ae133ebbccbf20, type: 3}
+  - {fileID: 8300000, guid: 0194cb7ba797fb44490256525e45dc1b, type: 3}
+  - {fileID: 8300000, guid: 2d62a42ed4a401d419801775d200e863, type: 3}
+  firstChoice1TTSList:
+  - {fileID: 8300000, guid: d53866d736796dc4ca7527f1cbb883ef, type: 3}
+  - {fileID: 8300000, guid: bef462b38912464418c270e3fd4aeb01, type: 3}
+  firstChoice2TTSList:
+  - {fileID: 8300000, guid: d10e456563b9bb94d8c046dd50df2f6b, type: 3}
+  - {fileID: 8300000, guid: 92b0b1f885bd5564f8fcdbf07b3a4a3e, type: 3}
+  firstChoice3TTSList:
+  - {fileID: 8300000, guid: 6fc812957861b4641af322c38afbc616, type: 3}
+  lastTTSList:
+  - {fileID: 8300000, guid: e9bcd33ae8575bf40b35baa893e7c98c, type: 3}
+  - {fileID: 8300000, guid: 366ddc5878cee1c40aa46785b9567deb, type: 3}
+  secondChoice1TTSList:
+  - {fileID: 8300000, guid: f09b56a539c9dcc4492a72ee6ba321a9, type: 3}
+  - {fileID: 8300000, guid: 5fd6b4a0a93ec984ca4e8ad3e41754cf, type: 3}
+  - {fileID: 8300000, guid: 76fdf3eb72b0868459059e03623fa6c1, type: 3}
+  secondChoice2TTSList:
+  - {fileID: 8300000, guid: 7c8993ed587e9734a94766ac95346d39, type: 3}
+  - {fileID: 8300000, guid: 6d7241391ec649f4d8753e47872cf0b9, type: 3}
+  secondChoice3TTSList:
+  - {fileID: 8300000, guid: 70bd824c596c2834084c1f3da81513bc, type: 3}
   audioSource: {fileID: 0}
   variousAudioController: {fileID: 1171271899}
-  choicePanel: {fileID: 1927520323}
-  popup1Panel: {fileID: 968763782}
-  popup2Panel: {fileID: 1968274302}
-  popup3Panel: {fileID: 716953761}
-  intermediatePanel: {fileID: 1160754564}
-  finalPanel: {fileID: 602653798}
-  nextChapterSceneName: NextChapter
-  mainRoomSceneName: BasicRoom
+  firstChoicePanel: {fileID: 0}
+  secondChoicePanel: {fileID: 0}
+  heroineCharacter: {fileID: 301231733}
+  heroineStartPosition: {fileID: 0}
+  heroineEndPosition: {fileID: 0}
+  heroineWalkDuration: 1
+  affectionManager: {fileID: 0}
+  nextDialogueController: {fileID: 0}
   delayBetweenTTS: 0.5
-  popupDuration: 2
 --- !u!1 &2004357332
 GameObject:
   m_ObjectHideFlags: 0
