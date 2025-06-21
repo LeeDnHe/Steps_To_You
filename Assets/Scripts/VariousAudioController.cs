@@ -12,6 +12,8 @@ public class VariousAudioController : MonoBehaviour
     public AudioClip doorCloseClip;         // 문 닫힘
     public AudioClip choiceAppearClip;      // 선택지 등장
     public AudioClip choiceClickClip;       // 선택지 클릭
+    public AudioClip resultPanelOpenClip;   // 결과창 열림
+    public AudioClip resultPanelCloseClip;  // 결과창 닫힘
     
     private AudioSource audioSource;
     
@@ -85,6 +87,18 @@ public class VariousAudioController : MonoBehaviour
     public void PlayChoiceClick()
     {
         PlayClip(choiceClickClip);
+    }
+    
+    // 8. 결과창 열림
+    public void PlayResultPanelOpen()
+    {
+        PlayClip(resultPanelOpenClip);
+    }
+    
+    // 9. 결과창 닫힘
+    public void PlayResultPanelClose()
+    {
+        PlayClip(resultPanelCloseClip);
     }
     
     // 오디오클립 재생 헬퍼 메서드

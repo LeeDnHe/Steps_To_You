@@ -48,6 +48,11 @@ public class BoxingManager : MonoBehaviour
     [Header("Game Manager Reference")]
     public BoxingInitializer boxingInitializer; // BoxingInitializer 참조 추가
     
+    [Header("VFX Settings")]
+    public GameObject leftCubeHitVFX; // 왼손 큐브 타격 시 VFX
+    public GameObject rightCubeHitVFX; // 오른손 큐브 타격 시 VFX
+    public GameObject forbiddenCubeHitVFX; // 금지 오브젝트 타격 시 VFX
+    
     // 게임 페이즈 관련
     public GamePhase currentPhase = GamePhase.Easy;
     private float gameStartTime;
@@ -56,7 +61,7 @@ public class BoxingManager : MonoBehaviour
     private bool gameStarted = false;
     
     // 페이즈별 설정값
-    private PhaseSettings easyPhase = new PhaseSettings(20f, 1.5f, 0.5f, 0.4f, 7f); // 20초, 1.5초 스폰, 0.5배속, 0.4배 범위
+    private PhaseSettings easyPhase = new PhaseSettings(20f, 1.5f, 0.5f, 0.4f, 8f); // 20초, 1.5초 스폰, 0.5배속, 0.4배 범위
     private PhaseSettings normalPhase = new PhaseSettings(60f, 1.0f, 1.0f, 0.8f, 4f); // 60초, 1초 스폰, 1배속, 0.8배 범위
     private PhaseSettings hardPhase = new PhaseSettings(20f, 0.5f, 1.0f, 0.8f, 0f); // 20초, 0.5초 스폰, 1배속, 0.8배 범위
     
@@ -346,6 +351,7 @@ public class BoxingManager : MonoBehaviour
             Debug.Log("Forbidden cube hit! Combo broken!");
             ResetCombo();
             PlayForbiddenHitSound();
+            PlayForbiddenCubeHitVFX(cube.transform.position);
             activeCubes.Remove(cube);
             Destroy(cube.gameObject);
             return;
@@ -390,6 +396,17 @@ public class BoxingManager : MonoBehaviour
                 }
                 
                 PlayDestroySound();
+                
+                // 큐브 타입에 따른 VFX 재생
+                if (cube.IsLeftCube)
+                {
+                    PlayLeftCubeHitVFX(cube.transform.position);
+                }
+                else
+                {
+                    PlayRightCubeHitVFX(cube.transform.position);
+                }
+                
                 UpdateComboUI();
                 activeCubes.Remove(cube);
                 Destroy(cube.gameObject);
@@ -505,6 +522,68 @@ public class BoxingManager : MonoBehaviour
         if (ForbiddenHitAudio != null && audioSource != null)
         {
             audioSource.PlayOneShot(ForbiddenHitAudio);
+        }
+    }
+    
+    /// <summary>
+    /// 왼손 큐브 타격 VFX 재생
+    /// </summary>
+    /// <param name="position">VFX가 재생될 위치</param>
+    public void PlayLeftCubeHitVFX(Vector3 position)
+    {
+        PlayVFXAtPosition(leftCubeHitVFX, position, "Left cube hit VFX");
+    }
+    
+    /// <summary>
+    /// 오른손 큐브 타격 VFX 재생
+    /// </summary>
+    /// <param name="position">VFX가 재생될 위치</param>
+    public void PlayRightCubeHitVFX(Vector3 position)
+    {
+        PlayVFXAtPosition(rightCubeHitVFX, position, "Right cube hit VFX");
+    }
+    
+    /// <summary>
+    /// 금지 오브젝트 타격 VFX 재생
+    /// </summary>
+    /// <param name="position">VFX가 재생될 위치</param>
+    public void PlayForbiddenCubeHitVFX(Vector3 position)
+    {
+        PlayVFXAtPosition(forbiddenCubeHitVFX, position, "Forbidden cube hit VFX");
+    }
+    
+    /// <summary>
+    /// 지정된 위치에 VFX 재생 (공통 메서드)
+    /// </summary>
+    /// <param name="vfxPrefab">재생할 VFX 프리팹</param>
+    /// <param name="position">VFX가 재생될 위치</param>
+    /// <param name="logMessage">로그 메시지</param>
+    private void PlayVFXAtPosition(GameObject vfxPrefab, Vector3 position, string logMessage)
+    {
+        if (vfxPrefab != null)
+        {
+            // VFX를 큐브 위치에 생성
+            GameObject vfxInstance = Instantiate(vfxPrefab, position, Quaternion.identity);
+            
+            // VFX가 파티클 시스템이라면 자동으로 파괴되도록 설정
+            ParticleSystem ps = vfxInstance.GetComponent<ParticleSystem>();
+            if (ps != null)
+            {
+                // 파티클 시스템의 duration + startLifetime 후에 자동 파괴
+                float destroyTime = ps.main.duration + ps.main.startLifetime.constantMax;
+                Destroy(vfxInstance, destroyTime);
+                Debug.Log($"{logMessage} played at position: {position}");
+            }
+            else
+            {
+                // 파티클 시스템이 아닌 경우 3초 후 파괴
+                Destroy(vfxInstance, 3f);
+                Debug.Log($"{logMessage} (non-particle) played at position: {position}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"{logMessage} prefab is not assigned!");
         }
     }
     

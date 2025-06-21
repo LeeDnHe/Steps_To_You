@@ -1,9 +1,10 @@
 using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(AudioSource))]
 public class DialogueFlowController : MonoBehaviour
 {
-    public AudioSource npcAudio;
+    private AudioSource npcAudio;
 
     public AudioClip[] npcLines; // 0: wav1 ~ 7, 7: wav8
 
@@ -15,6 +16,9 @@ public class DialogueFlowController : MonoBehaviour
     public GameObject DialogueFlowController2;
     
     public VariousAudioController variousAudioController; // 오디오 관리 컨트롤러
+    
+    [Header("Character Animation")]
+    public Animator heroineAnimator; // 여주인공 애니메이터
 
     private bool playerClosedDialogue = false;
     private int choiceFromPanel = -1;
@@ -24,10 +28,27 @@ public class DialogueFlowController : MonoBehaviour
 
     void Start()
     {
+        // 같은 오브젝트의 AudioSource 컴포넌트 가져오기
+        npcAudio = GetComponent<AudioSource>();
+        
         if (!isRunning)
         {
             StartCoroutine(RunDialogue());
         }
+    }
+    
+    void OnDisable()
+    {
+        // GameObject가 비활성화될 때 오디오 정지
+        if (npcAudio != null && npcAudio.isPlaying)
+        {
+            npcAudio.Stop();
+            Debug.Log("DialogueFlowController audio stopped on disable");
+        }
+        
+        // 실행 중인 코루틴도 정리
+        StopAllCoroutines();
+        isRunning = false;
     }
 
     IEnumerator RunDialogue()
@@ -37,11 +58,25 @@ public class DialogueFlowController : MonoBehaviour
 
         npcAudio.clip = npcLines[0]; // wav1
         npcAudio.Play();
+        
+        // wav1 -> take_01 애니메이션 재생
+        if (heroineAnimator != null)
+        {
+            heroineAnimator.Play("take_01");
+        }
+        
         yield return new WaitUntil(() => !npcAudio.isPlaying);
         yield return new WaitForSecondsRealtime(0.5f);
 
         npcAudio.clip = npcLines[1]; // wav2
         npcAudio.Play();
+        
+        // wav2 -> take_02 애니메이션 재생
+        if (heroineAnimator != null)
+        {
+            heroineAnimator.Play("take_02");
+        }
+        
         yield return new WaitUntil(() => !npcAudio.isPlaying);
         yield return new WaitForSecondsRealtime(0.5f);
 
@@ -63,6 +98,13 @@ public class DialogueFlowController : MonoBehaviour
 
         npcAudio.clip = npcLines[2]; // wav3
         npcAudio.Play();
+        
+        // wav3 -> take_03 애니메이션 재생
+        if (heroineAnimator != null)
+        {
+            heroineAnimator.Play("take_03");
+        }
+        
         yield return new WaitUntil(() => !npcAudio.isPlaying);
         yield return new WaitForSecondsRealtime(0.5f);
 
@@ -82,12 +124,26 @@ public class DialogueFlowController : MonoBehaviour
             case 0: // 1번 선택 → wav4
                 npcAudio.clip = npcLines[3];
                 npcAudio.Play();
-                yield return new WaitForSecondsRealtime(0.5f);
+                
+                // wav4 -> take_04 애니메이션 재생
+                if (heroineAnimator != null)
+                {
+                    heroineAnimator.Play("take_04");
+                }
+                
+                yield return new WaitUntil(() => !npcAudio.isPlaying);
                 break;
 
             case 1: // 2번 선택 → wav5 + 추가 선택
                 npcAudio.clip = npcLines[4];
                 npcAudio.Play();
+                
+                // wav5 -> take_05 애니메이션 재생
+                if (heroineAnimator != null)
+                {
+                    heroineAnimator.Play("take_05");
+                }
+                
                 yield return new WaitUntil(() => !npcAudio.isPlaying);
 
                 // 두 번째 선택지 등장 사운드 재생
@@ -101,18 +157,42 @@ public class DialogueFlowController : MonoBehaviour
                 NPCPanel2.SetActive(false);
 
                 if (choiceFromPanel2 == 0)
+                {
                     npcAudio.clip = npcLines[6]; // wav7
+                    npcAudio.Play();
+                    
+                    // wav7 -> take_04 애니메이션 재생
+                    if (heroineAnimator != null)
+                    {
+                        heroineAnimator.Play("take_04");
+                    }
+                }
                 else
+                {
                     npcAudio.clip = npcLines[7]; // wav8
+                    npcAudio.Play();
+                    
+                    // wav8 -> take_06 애니메이션 재생
+                    if (heroineAnimator != null)
+                    {
+                        heroineAnimator.Play("take_06");
+                    }
+                }
 
-                npcAudio.Play();
-                yield return new WaitForSecondsRealtime(0.5f);
+                yield return new WaitUntil(() => !npcAudio.isPlaying);
                 break;
 
             case 2: // 3번 선택 → wav6
                 npcAudio.clip = npcLines[5];
                 npcAudio.Play();
-                yield return new WaitForSecondsRealtime(0.5f);
+                
+                // wav6 -> take_06 애니메이션 재생
+                if (heroineAnimator != null)
+                {
+                    heroineAnimator.Play("take_06");
+                }
+                
+                yield return new WaitUntil(() => !npcAudio.isPlaying);
                 break;
         }
 
@@ -127,6 +207,9 @@ public class DialogueFlowController : MonoBehaviour
         {
             DialogueFlowController2.SetActive(true);
         }
+
+        // 🔥 현재 오브젝트 비활성화 (다음 파트로 넘어가므로)
+        gameObject.SetActive(false);
 
         isRunning = false;
     }

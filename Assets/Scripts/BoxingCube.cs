@@ -14,6 +14,7 @@ public class BoxingCube : MonoBehaviour
     public float LifeTime = 10f; // 큐브가 살아있을 시간 (초)
     
     public bool IsForbiddenCube => isForbiddenCube;
+    public bool IsLeftCube => isLeftCube;
     
     public void Initialize(BoxingManager boxingManager, bool isLeft, bool isForbidden = false)
     {

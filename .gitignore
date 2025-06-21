@@ -12,6 +12,10 @@
 /[Uu]ser[Ss]ettings/
 *.log
 
+# 용량큰 캐릭터 무시
+Assets/Character/animation.fbx
+Assets/Character/animation_fix.fbx
+
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
 *.blend1.meta
