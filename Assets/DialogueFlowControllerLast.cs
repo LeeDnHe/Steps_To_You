@@ -31,6 +31,9 @@ public class DialogueFlowControllerLast : MonoBehaviour
     [Header("Character Animation")]
     public Animator heroineAnimator; // 여주인공 애니메이터
     
+    [Header("White Background Transition")]
+    public GameObject whiteBackgroundObject; // 흰색 배경 GameObject
+    
     [Header("Settings")]
     public int successThreshold = 200; // 성공 기준 점수
     public bool debugMode = false; // 디버그 모드
@@ -42,6 +45,7 @@ public class DialogueFlowControllerLast : MonoBehaviour
     private bool isSuccess = false; // 성공 여부
     private bool isFlowStarted = false; // 플로우 시작 여부
     private bool forceFailure = false; // 강제 실패 플래그
+    private float originalAmbientIntensity; // 원래 감마값 저장용
     
     // 패널 클릭 상태 변수들
     private bool successPanel1Clicked = false;
@@ -55,6 +59,30 @@ public class DialogueFlowControllerLast : MonoBehaviour
     {
         // 모든 패널 초기 비활성화
         HideAllPanels();
+        
+        // 원래 감마값 저장
+        originalAmbientIntensity = RenderSettings.ambientIntensity;
+        
+        // 흰색 배경 초기화 (항상 활성화, 알파값 0)
+        if (whiteBackgroundObject != null)
+        {
+            whiteBackgroundObject.SetActive(true);
+            
+            // 하얀색 이미지 컴포넌트 찾아서 알파값 0으로 설정
+            UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
+            if (whiteImage == null)
+            {
+                whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
+            }
+            
+            if (whiteImage != null)
+            {
+                Color color = whiteImage.color;
+                color.a = 0f;
+                whiteImage.color = color;
+                Debug.Log("White background initialized - always active with alpha 0");
+            }
+        }
         
         // TTS 오디오 소스 설정 확인
         if (ttsAudioSource == null)
@@ -243,6 +271,9 @@ public class DialogueFlowControllerLast : MonoBehaviour
             yield return StartCoroutine(PlayTTSWithAnimation(successTTSClips[4], "Success TTS 5", "take_51"));
         }
         
+        // 10. 하얀 배경으로 5초에 걸쳐 서서히 전환
+        yield return StartCoroutine(FadeToWhiteBackground());
+        
         if (debugMode)
             Debug.Log("Success Flow Completed");
     }
@@ -295,6 +326,9 @@ public class DialogueFlowControllerLast : MonoBehaviour
                 yield return StartCoroutine(PlayTTSWithAnimation(failureTTSClips[i], $"Failure TTS {i + 1}", animationName));
             }
         }
+        
+        // 9. 하얀 배경으로 5초에 걸쳐 서서히 전환
+        yield return StartCoroutine(FadeToWhiteBackground());
         
         if (debugMode)
             Debug.Log("Failure Flow Completed");
@@ -500,5 +534,59 @@ public class DialogueFlowControllerLast : MonoBehaviour
         if (failureDialoguePanel1 != null) failureDialoguePanel1.SetActive(false);
         if (failureDialoguePanel2 != null) failureDialoguePanel2.SetActive(false);
         if (failureDialoguePanel3 != null) failureDialoguePanel3.SetActive(false);
+    }
+    
+    /// <summary>
+    /// 하얀 배경으로 4초에 걸쳐 서서히 전환 (최종 마무리용 - 알파값 최대로 유지)
+    /// </summary>
+    IEnumerator FadeToWhiteBackground()
+    {
+        Debug.Log("Starting fade to white background over 4 seconds (final ending)");
+        
+        if (whiteBackgroundObject == null)
+        {
+            Debug.LogWarning("White background object not assigned - skipping fade");
+            yield break;
+        }
+        
+        // 하얀색 이미지 컴포넌트 찾기
+        UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
+        
+        if (whiteImage == null)
+        {
+            // 하위 오브젝트에서 Image 컴포넌트 찾기
+            whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
+        }
+        
+        if (whiteImage == null)
+        {
+            Debug.LogError("White background object has no Image component!");
+            yield break;
+        }
+        
+        float elapsedTime = 0f;
+        float fadeDuration = 4f; // 4초에 걸쳐 전환
+        
+        // 알파값을 0에서 1로 서서히 증가 (4초 동안)
+        while (elapsedTime < fadeDuration)
+        {
+            float t = elapsedTime / fadeDuration;
+            float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
+            float currentAlpha = Mathf.Lerp(0f, 1f, smoothT);
+            
+            Color color = whiteImage.color;
+            color.a = currentAlpha;
+            whiteImage.color = color;
+            
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        // 최종 알파값 설정 (1로 유지 - 완전히 하얀 화면)
+        Color finalColor = whiteImage.color;
+        finalColor.a = 1f;
+        whiteImage.color = finalColor;
+        
+        Debug.Log("Fade to white background completed - white background is now fully visible and will remain");
     }
 }

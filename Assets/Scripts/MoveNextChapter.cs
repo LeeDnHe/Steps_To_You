@@ -25,10 +25,25 @@ public class MoveNextChapter : MonoBehaviour
         // 원래 감마값 저장
         originalAmbientIntensity = RenderSettings.ambientIntensity;
         
-        // 하얀 배경 초기화 (비활성화)
+        // 하얀 배경 초기화 (항상 활성화, 알파값 0)
         if (whiteBackgroundObject != null)
         {
-            whiteBackgroundObject.SetActive(false);
+            whiteBackgroundObject.SetActive(true);
+            
+            // 하얀색 이미지 컴포넌트 찾아서 알파값 0으로 설정
+            UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
+            if (whiteImage == null)
+            {
+                whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
+            }
+            
+            if (whiteImage != null)
+            {
+                Color color = whiteImage.color;
+                color.a = 0f;
+                whiteImage.color = color;
+                Debug.Log("MoveNextChapter: White background initialized - always active with alpha 0");
+            }
         }
         
         // UI 버튼 컴포넌트 검색 및 이벤트 연결
@@ -67,7 +82,7 @@ public class MoveNextChapter : MonoBehaviour
     }
     
     /// <summary>
-    /// 하얀 페이드 효과 후 씬 로드
+    /// 하얀 페이드 효과 후 씬 로드 (알파값 조절 방식)
     /// </summary>
     IEnumerator FadeToWhiteAndLoadScene()
     {
@@ -78,34 +93,49 @@ public class MoveNextChapter : MonoBehaviour
             yield break;
         }
         
-        Debug.Log("MoveNextChapter: 하얀 페이드 효과 시작");
+        // 하얀색 이미지 컴포넌트 찾기
+        UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
         
-        // 1. GameObject 활성화
-        whiteBackgroundObject.SetActive(true);
+        if (whiteImage == null)
+        {
+            // 하위 오브젝트에서 Image 컴포넌트 찾기
+            whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
+        }
         
-        // 2. 감마값 0으로 설정 (완전 어둠)
-        RenderSettings.ambientIntensity = 0f;
-        Debug.Log("MoveNextChapter: Gamma set to 0 (complete darkness)");
+        if (whiteImage == null)
+        {
+            Debug.LogError("MoveNextChapter: White background object has no Image component! Loading scene immediately.");
+            SceneManager.LoadScene(targetSceneName);
+            yield break;
+        }
         
-        // 3. 점차 증가 (어둠 -> 원래 밝기) - 하얀 페이드 효과
+        Debug.Log("MoveNextChapter: 하얀 페이드 효과 시작 (알파값 조절)");
+        
+        // 알파값을 0에서 1로 서서히 증가
         float elapsedTime = 0f;
         
         while (elapsedTime < fadeInDuration)
         {
             float t = elapsedTime / fadeInDuration;
             float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
+            float currentAlpha = Mathf.Lerp(0f, 1f, smoothT);
             
-            RenderSettings.ambientIntensity = Mathf.Lerp(0f, originalAmbientIntensity, smoothT);
+            Color color = whiteImage.color;
+            color.a = currentAlpha;
+            whiteImage.color = color;
             
             elapsedTime += Time.deltaTime;
             yield return null;
         }
         
-        // 4. 최종값 설정 (원래 밝기로 복원)
-        RenderSettings.ambientIntensity = originalAmbientIntensity;
-        Debug.Log($"MoveNextChapter: 하얀 페이드 효과 완료 - Gamma restored to {originalAmbientIntensity}");
+        // 최종 알파값 설정 (완전히 하얀 화면)
+        Color finalColor = whiteImage.color;
+        finalColor.a = 1f;
+        whiteImage.color = finalColor;
         
-        // 5. 씬 로드
+        Debug.Log($"MoveNextChapter: 하얀 페이드 효과 완료 - Alpha set to 1.0");
+        
+        // 씬 로드
         Debug.Log($"MoveNextChapter: 씬 '{targetSceneName}' 로드 시작");
         SceneManager.LoadScene(targetSceneName);
     }

@@ -34,7 +34,7 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
     
     [Header("Character Settings")]
     public GameObject heroineCharacter; // 여주인공 캐릭터
-    public Transform heroineEndPosition;   // 여주인공 목적지 위치
+    public Transform playerTransform; // 플레이어 Transform (직접 할당)
     public float heroineWalkDuration = 1.0f; // 여주인공 이동 시간
     public Animator heroineAnimator; // 여주인공 애니메이터
     
@@ -91,10 +91,25 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
             heroineAnimator = heroineCharacter.GetComponent<Animator>();
         }
         
-        // 흰색 배경 초기화 (비활성화)
+        // 흰색 배경 초기화 (항상 활성화, 알파값 0)
         if (whiteBackgroundObject != null)
         {
-            whiteBackgroundObject.SetActive(false);
+            whiteBackgroundObject.SetActive(true);
+            
+            // 하얀색 이미지 컴포넌트 찾아서 알파값 0으로 설정
+            UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
+            if (whiteImage == null)
+            {
+                whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
+            }
+            
+            if (whiteImage != null)
+            {
+                Color color = whiteImage.color;
+                color.a = 0f;
+                whiteImage.color = color;
+                Debug.Log("White background initialized - always active with alpha 0");
+            }
         }
         
         // 원래 감마값 저장
@@ -168,27 +183,26 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
     }
     
     /// <summary>
-    /// 여주인공 캐릭터 이동 (현재 위치에서 목적지로)
+    /// 여주인공 캐릭터 이동 (현재 위치에서 플레이어 기준 상대 위치로, 이동 중 플레이어를 바라보며)
     /// </summary>
     IEnumerator MoveHeroineCharacter()
     {
-        if (heroineCharacter != null && heroineEndPosition != null)
+        if (heroineCharacter != null)
         {
-            Debug.Log("Moving heroine character from current position");
+            Debug.Log("Moving heroine character from current position to player-relative position");
             
             // 현재 위치를 시작점으로 사용
             Vector3 startPos = heroineCharacter.transform.position;
-            Vector3 endPos = heroineEndPosition.position;
-            Quaternion endRot = heroineEndPosition.rotation;
             
-            // 목적지 방향으로 즉시 회전 (자연스러운 이동을 위해)
-            Vector3 direction = (endPos - startPos).normalized;
-            if (direction != Vector3.zero)
-            {
-                Quaternion lookRotation = Quaternion.LookRotation(direction);
-                heroineCharacter.transform.rotation = lookRotation;
-                Debug.Log("Heroine rotated to face destination");
-            }
+            // 플레이어 위치 가져오기 (직접 할당된 Transform 사용)
+            Vector3 playerPos = playerTransform != null ? playerTransform.position : Vector3.zero;
+            
+            // 플레이어 기준 x축 + 0.7f 위치를 목적지로 설정
+            Vector3 endPos = new Vector3(
+                playerPos.x + 0.7f,  // x축으로 +0.7f
+                playerPos.y,         // y축은 플레이어와 동일
+                playerPos.z          // z축은 플레이어와 동일
+            );
             
             // 걷기 애니메이션 시작 (애니메이터가 있다면)
             if (heroineAnimator != null)
@@ -196,13 +210,35 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
                 heroineAnimator.SetBool("IsWalking", true);
             }
             
-            // 이동 (회전은 목적지 도착 후 최종 회전으로 처리)
+            // 이동하면서 지속적으로 플레이어를 바라보기
             float elapsedTime = 0;
             
             while (elapsedTime < heroineWalkDuration)
             {
                 float t = elapsedTime / heroineWalkDuration;
+                
+                // 위치 보간
                 heroineCharacter.transform.position = Vector3.Lerp(startPos, endPos, t);
+                
+                // 실시간으로 플레이어 방향으로 회전 (이동 중에도 계속 플레이어를 바라봄)
+                Vector3 currentPlayerPos = playerTransform != null ? playerTransform.position : Vector3.zero;
+                
+                // 카메라가 있다면 카메라 위치 사용, 없다면 playerTransform 위치 사용
+                Vector3 targetLookPos = Camera.main != null ? Camera.main.transform.position : currentPlayerPos;
+                
+                Vector3 directionToPlayer = (targetLookPos - heroineCharacter.transform.position).normalized;
+                directionToPlayer.y = 0; // Y축 회전만 적용 (수평 회전)
+                
+                if (directionToPlayer != Vector3.zero)
+                {
+                    Quaternion lookAtPlayer = Quaternion.LookRotation(directionToPlayer);
+                    // 부드러운 회전을 위해 Slerp 사용
+                    heroineCharacter.transform.rotation = Quaternion.Slerp(
+                        heroineCharacter.transform.rotation, 
+                        lookAtPlayer, 
+                        Time.deltaTime * 5f // 회전 속도 조절
+                    );
+                }
                 
                 elapsedTime += Time.deltaTime;
                 yield return null;
@@ -211,19 +247,18 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
             // 최종 위치 설정
             heroineCharacter.transform.position = endPos;
             
-            // 플레이어를 향해 자연스럽게 회전 (XR Origin 또는 카메라 방향으로)
-            if (Camera.main != null)
+            // 최종적으로 플레이어를 정확히 바라보도록 설정
+            Vector3 finalPlayerPos = playerTransform != null ? playerTransform.position : Vector3.zero;
+            Vector3 finalTargetLookPos = Camera.main != null ? Camera.main.transform.position : finalPlayerPos;
+            
+            Vector3 finalDirectionToPlayer = (finalTargetLookPos - heroineCharacter.transform.position).normalized;
+            finalDirectionToPlayer.y = 0; // Y축 회전만 적용 (수평 회전)
+            
+            if (finalDirectionToPlayer != Vector3.zero)
             {
-                Vector3 playerPosition = Camera.main.transform.position;
-                Vector3 directionToPlayer = (playerPosition - heroineCharacter.transform.position).normalized;
-                directionToPlayer.y = 0; // Y축 회전만 적용 (수평 회전)
-                
-                if (directionToPlayer != Vector3.zero)
-                {
-                    Quaternion lookAtPlayer = Quaternion.LookRotation(directionToPlayer);
-                    heroineCharacter.transform.rotation = lookAtPlayer;
-                    Debug.Log("Heroine rotated to face player");
-                }
+                Quaternion finalLookAtPlayer = Quaternion.LookRotation(finalDirectionToPlayer);
+                heroineCharacter.transform.rotation = finalLookAtPlayer;
+                Debug.Log("Heroine final rotation set to face player");
             }
             
             // 걷기 애니메이션 종료 (애니메이터가 있다면)
@@ -232,11 +267,11 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
                 heroineAnimator.SetBool("IsWalking", false);
             }
             
-            Debug.Log("Heroine character movement completed");
+            Debug.Log("Heroine character movement completed - moved while looking at player");
         }
         else
         {
-            Debug.LogWarning("Heroine character or end position not set");
+            Debug.LogWarning("Heroine character or player transform not set");
         }
     }
     
@@ -403,10 +438,35 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
     /// </summary>
     IEnumerator TransitionToNextDialogue()
     {
-        // 1. 흰색 배경 페이드인 (2초)
-        yield return StartCoroutine(FadeWhiteBackground(0f, 1f, 2f));
+        // 1. 흰색 배경 효과 (4초: 2초 페이드인 + 2초 페이드아웃)
+        // 배경음악 변경과 컨트롤러 설정은 중간(2초 지점)에 실행
+        StartCoroutine(SetupNextDialogueAtMidpoint());
+        yield return StartCoroutine(FadeWhiteBackground(4f));
         
-        // 2. 배경음악 변경 (LastDialogue용 음악으로 변경)
+        // 2. 흰색 화면 전환 완료 후 TTS 시작
+        if (nextDialogueController != null)
+        {
+            var finalController = nextDialogueController.GetComponent<DialogueFlowControllerLast>();
+            if (finalController != null)
+            {
+                finalController.StartFinalDialogueFlow();
+                Debug.Log("Final dialogue flow started after white background transition completed");
+            }
+        }
+        
+        // 3. 현재 오브젝트 비활성화 (다음 파트로 넘어가므로)
+        gameObject.SetActive(false);
+    }
+    
+    /// <summary>
+    /// 흰색 배경 중간 지점에서 다음 대화 설정
+    /// </summary>
+    IEnumerator SetupNextDialogueAtMidpoint()
+    {
+        // 2초 대기 (흰색 배경이 최대가 되는 시점)
+        yield return new WaitForSeconds(2f);
+        
+        // 배경음악 변경 (LastDialogue용 음악으로 변경)
         if (backgroundSoundManager != null)
         {
             // 기본 음악으로 변경 (필요시 다른 음악으로 변경 가능)
@@ -414,7 +474,7 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
             Debug.Log("Background music changed for last dialogue");
         }
         
-        // 3. 다음 대화 컨트롤러 설정 (활성화만 하고 TTS는 아직 시작하지 않음)
+        // 다음 대화 컨트롤러 설정 (활성화만 하고 TTS는 아직 시작하지 않음)
         if (nextDialogueController != null)
         {
             // DialogueFlowControllerLast에 점수 정보 및 강제 실패 플래그 전달
@@ -434,95 +494,79 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
             nextDialogueController.SetActive(true);
             Debug.Log("마지막 dialogue controller activated (TTS will start after white background transition)");
         }
-        
-        // 4. 흰색 배경 페이드아웃 (2초)
-        yield return StartCoroutine(FadeWhiteBackground(1f, 0f, 2f));
-        
-        // 5. 흰색 화면 전환 완료 후 TTS 시작
-        if (nextDialogueController != null)
-        {
-            var finalController = nextDialogueController.GetComponent<DialogueFlowControllerLast>();
-            if (finalController != null)
-            {
-                finalController.StartFinalDialogueFlow();
-                Debug.Log("Final dialogue flow started after white background transition completed");
-            }
-        }
-        
-        // 6. 현재 오브젝트 비활성화 (다음 파트로 넘어가므로)
-        gameObject.SetActive(false);
     }
     
     /// <summary>
-    /// 흰색 배경 표시/숨김 효과 (CanvasGroup 알파값 + 감마값 페이드)
+    /// 흰색 배경 효과 (0 → 1 → 0 패턴으로 알파값 조절)
     /// </summary>
-    /// <param name="startAlpha">시작 상태 (0: 숨김, 1: 표시)</param>
-    /// <param name="endAlpha">끝 상태 (0: 숨김, 1: 표시)</param>
-    /// <param name="duration">지속 시간</param>
+    /// <param name="duration">전체 지속 시간 (절반씩 페이드인/아웃)</param>
     /// <returns></returns>
-    IEnumerator FadeWhiteBackground(float startAlpha, float endAlpha, float duration)
+    IEnumerator FadeWhiteBackground(float duration)
     {
         if (whiteBackgroundObject == null) yield break;
         
-        float elapsedTime = 0f;
+        // 하얀색 이미지 컴포넌트 찾기
+        UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
         
-        if (startAlpha < endAlpha) // 페이드 인 (0 -> 1)
+        if (whiteImage == null)
         {
-            Debug.Log("White background fade IN started");
-            
-            // 1. GameObject 활성화
-            whiteBackgroundObject.SetActive(true);
-            
-            // 2. 감마값 0으로 설정 (완전 어둠)
-            RenderSettings.ambientIntensity = 0f;
-            Debug.Log("Gamma set to 0 (complete darkness)");
-            
-            // 3. 점차 증가 (어둠 -> 원래 밝기)
-            while (elapsedTime < duration)
-            {
-                float t = elapsedTime / duration;
-                float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
-                
-                RenderSettings.ambientIntensity = Mathf.Lerp(0f, originalAmbientIntensity, smoothT);
-                
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            
-            // 4. 최종값 설정 (원래 밝기로 복원)
-            RenderSettings.ambientIntensity = originalAmbientIntensity;
-            Debug.Log($"White background fade IN completed - Gamma restored to {originalAmbientIntensity}");
+            // 하위 오브젝트에서 Image 컴포넌트 찾기
+            whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
         }
-        else // 페이드 아웃 (1 -> 0)
+        
+        if (whiteImage == null)
         {
-            Debug.Log("White background fade OUT started");
-            
-            // 1. GameObject는 이미 활성화되어 있음
-            // 2. 현재 감마값에서 0으로 점차 감소 (밝음 -> 어둠)
-            float currentGamma = RenderSettings.ambientIntensity;
-            
-            while (elapsedTime < duration)
-            {
-                float t = elapsedTime / duration;
-                float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
-                
-                RenderSettings.ambientIntensity = Mathf.Lerp(currentGamma, 0f, smoothT);
-                
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            
-            // 3. 감마값 0으로 설정 (완전 어둠)
-            RenderSettings.ambientIntensity = 0f;
-            Debug.Log("Gamma set to 0 (complete darkness)");
-            
-            // 4. GameObject 비활성화
-            whiteBackgroundObject.SetActive(false);
-            
-            // 5. 감마값 원래대로 복원
-            RenderSettings.ambientIntensity = originalAmbientIntensity;
-            Debug.Log($"White background fade OUT completed - GameObject deactivated, Gamma restored to {originalAmbientIntensity}");
+            Debug.LogError("White background object has no Image component!");
+            yield break;
         }
+        
+        float halfDuration = duration / 2f;
+        
+        Debug.Log($"White background fade: 0 → 1 → 0 over {duration} seconds (half: {halfDuration}s each)");
+        
+        // 1단계: 알파값 0 → 1 (절반 시간)
+        float elapsedTime = 0f;
+        while (elapsedTime < halfDuration)
+        {
+            float t = elapsedTime / halfDuration;
+            float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
+            float currentAlpha = Mathf.Lerp(0f, 1f, smoothT);
+            
+            Color color = whiteImage.color;
+            color.a = currentAlpha;
+            whiteImage.color = color;
+            
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        // 중간값 확실히 설정 (알파값 1)
+        Color midColor = whiteImage.color;
+        midColor.a = 1f;
+        whiteImage.color = midColor;
+        
+        // 2단계: 알파값 1 → 0 (나머지 절반 시간)
+        elapsedTime = 0f;
+        while (elapsedTime < halfDuration)
+        {
+            float t = elapsedTime / halfDuration;
+            float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
+            float currentAlpha = Mathf.Lerp(1f, 0f, smoothT);
+            
+            Color color = whiteImage.color;
+            color.a = currentAlpha;
+            whiteImage.color = color;
+            
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        // 최종 알파값 설정 (0)
+        Color finalColor = whiteImage.color;
+        finalColor.a = 0f;
+        whiteImage.color = finalColor;
+        
+        Debug.Log($"White background fade completed - Alpha returned to 0");
     }
     
     /// <summary>

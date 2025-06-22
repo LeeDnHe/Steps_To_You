@@ -113,7 +113,7 @@ public class DialogueFlowController : MonoBehaviour
         {
             variousAudioController.PlayChoiceAppear();
         }
-        
+
         NPCPanel.SetActive(true);
         yield return new WaitUntil(() => choiceFromPanel != -1); // 선택지 1 클릭 대기
 
@@ -170,7 +170,7 @@ public class DialogueFlowController : MonoBehaviour
                 else
                 {
                     npcAudio.clip = npcLines[7]; // wav8
-                    npcAudio.Play();
+                npcAudio.Play();
                     
                     // wav8 -> take_06 애니메이션 재생
                     if (heroineAnimator != null)

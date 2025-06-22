@@ -31,6 +31,16 @@ public class BoxingInitializer : MonoBehaviour
     public GameObject countdownPanel;
     public TextMeshProUGUI countdownText;
     
+    [Header("Game UI Settings")]
+    public GameObject scorePanel;
+    public TextMeshProUGUI scoreText;
+    public GameObject comboPanel;
+    public TextMeshProUGUI comboText;
+    public GameObject timePanel;
+    public TextMeshProUGUI timeText;
+    public GameObject stage1Panel; // Normal Phase 표시
+    public GameObject stage2Panel; // Hard Phase 표시
+    
     [Header("Game Flow Settings")]
     public float delayAfterPreGameTTS = 0.5f;
     
@@ -38,7 +48,6 @@ public class BoxingInitializer : MonoBehaviour
     public int minScoreToWin = 100;
     public GameObject successPanel; // 성공 시 표시할 패널
     public GameObject failurePanel; // 실패 시 표시할 패널
-    public TextMeshProUGUI finalScoreText; // 최종 점수 텍스트
     
     [Header("Success Dialogue Settings")]
     public GameObject heroineCharacter; // 여주인공 캐릭터 (대화용)
@@ -74,10 +83,25 @@ public class BoxingInitializer : MonoBehaviour
         originalSkybox = RenderSettings.skybox;
         originalAmbientIntensity = RenderSettings.ambientIntensity;
         
-        // 흰색 배경 초기화 (비활성화)
+        // 흰색 배경 초기화 (항상 활성화, 알파값 0)
         if (whiteBackgroundObject != null)
         {
-            whiteBackgroundObject.SetActive(false);
+            whiteBackgroundObject.SetActive(true);
+            
+            // 하얀색 이미지 컴포넌트 찾아서 알파값 0으로 설정
+            UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
+            if (whiteImage == null)
+            {
+                whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
+            }
+            
+            if (whiteImage != null)
+            {
+                Color color = whiteImage.color;
+                color.a = 0f;
+                whiteImage.color = color;
+                Debug.Log("White background initialized - always active with alpha 0");
+            }
         }
         
         // 포탈 VFX 초기화 (비활성화)
@@ -98,6 +122,18 @@ public class BoxingInitializer : MonoBehaviour
             successPanel.SetActive(false);
         if (failurePanel != null)
             failurePanel.SetActive(false);
+            
+        // 게임 UI 패널들 초기 비활성화
+        if (scorePanel != null)
+            scorePanel.SetActive(false);
+        if (comboPanel != null)
+            comboPanel.SetActive(false);
+        if (timePanel != null)
+            timePanel.SetActive(false);
+        if (stage1Panel != null)
+            stage1Panel.SetActive(false);
+        if (stage2Panel != null)
+            stage2Panel.SetActive(false);
             
         // 대화 컨트롤러 초기 비활성화
         if (dialogueController != null)
@@ -164,14 +200,10 @@ public class BoxingInitializer : MonoBehaviour
     /// </summary>
     IEnumerator TransitionToBoxingAndStartTTS()
     {
-        // 1. 흰색 배경 페이드인 (1초) - 플레이어와 여주인공 텔레포트 전
-        yield return StartCoroutine(FadeWhiteBackground(0f, 1f, 1f));
-        
-        // 2. 플레이어와 복싱 전용 여주인공 Pre-Game 위치로 텔레포트
-        TeleportToPreGamePositions();
-        
-        // 3. 흰색 배경 페이드아웃 (1초)
-        yield return StartCoroutine(FadeWhiteBackground(1f, 0f, 1f));
+        // 1. 흰색 배경 효과 (2초: 1초 페이드인 + 1초 페이드아웃)
+        // 텔레포트는 중간(1초 지점)에 실행
+        StartCoroutine(TeleportAtMidpoint());
+        yield return StartCoroutine(FadeWhiteBackground(2f));
         
         // 4. 설명 및 이지페이즈 음악 시작
         if (backgroundSoundManager != null)
@@ -199,6 +231,18 @@ public class BoxingInitializer : MonoBehaviour
             Debug.LogWarning("TTS Manager not found, starting countdown directly");
             OnPreGameTTSComplete();
         }
+    }
+    
+    /// <summary>
+    /// 흰색 배경 중간 지점(1초 후)에 텔레포트 실행
+    /// </summary>
+    IEnumerator TeleportAtMidpoint()
+    {
+        // 1초 대기 (흰색 배경이 최대가 되는 시점)
+        yield return new WaitForSeconds(1f);
+        
+        // 텔레포트 실행
+        TeleportToPreGamePositions();
     }
     
     /// <summary>
@@ -339,14 +383,28 @@ public class BoxingInitializer : MonoBehaviour
     /// </summary>
     IEnumerator TransitionToBoxingGame()
     {
-        // 1. 흰색 배경 페이드인 (1초)
-        yield return StartCoroutine(FadeWhiteBackground(0f, 1f, 1f));
+        // 1. 흰색 배경 효과 (2초: 1초 페이드인 + 1초 페이드아웃)
+        // 환경 변경과 텔레포트는 중간(1초 지점)에 실행
+        StartCoroutine(SetupBoxingEnvironmentAtMidpoint());
+        yield return StartCoroutine(FadeWhiteBackground(2f));
         
-        // 2. 배경 에셋들 비활성화 및 스카이박스 변경
+        // 2. 카운트다운 및 게임 시작
+        StartCoroutine(ShowCountdownAndStartGame());
+    }
+    
+    /// <summary>
+    /// 흰색 배경 중간 지점에서 복싱 환경 설정
+    /// </summary>
+    IEnumerator SetupBoxingEnvironmentAtMidpoint()
+    {
+        // 1초 대기 (흰색 배경이 최대가 되는 시점)
+        yield return new WaitForSeconds(1f);
+        
+        // 배경 에셋들 비활성화 및 스카이박스 변경
         DisableBackgroundAssets();
         ChangeSkybox(boxingSkybox);
         
-        // 3. 플레이어를 복싱 시작 위치로 텔레포트
+        // 플레이어를 복싱 시작 위치로 텔레포트
         if (xrOrigin != null && boxingPlayerPosition != null)
         {
             xrOrigin.position = boxingPlayerPosition.position;
@@ -354,18 +412,12 @@ public class BoxingInitializer : MonoBehaviour
             Debug.Log("Player teleported to Boxing position");
         }
         
-        // 4. 복싱 전용 여주인공 비활성화
+        // 복싱 전용 여주인공 비활성화
         if (boxingHeroineCharacter != null)
         {
             boxingHeroineCharacter.SetActive(false);
             Debug.Log("Boxing heroine character deactivated for boxing game");
         }
-        
-        // 5. 흰색 배경 페이드아웃 (1초)
-        yield return StartCoroutine(FadeWhiteBackground(1f, 0f, 1f));
-        
-        // 6. 카운트다운 및 게임 시작
-        StartCoroutine(ShowCountdownAndStartGame());
     }
     
     /// <summary>
@@ -382,11 +434,21 @@ public class BoxingInitializer : MonoBehaviour
             countdownPanel.SetActive(true);
         }
         
-        // 콤보 UI 활성화 (5초 카운트다운 직전)
-        if (boxingManager != null && boxingManager.ComboUI != null)
+        // 게임 UI 활성화 (5초 카운트다운 직전)
+        if (scorePanel != null)
         {
-            boxingManager.ComboUI.SetActive(true);
-            Debug.Log("Combo UI activated before countdown");
+            scorePanel.SetActive(true);
+            Debug.Log("Score Panel activated before countdown");
+        }
+        if (comboPanel != null)
+        {
+            comboPanel.SetActive(true);
+            Debug.Log("Combo Panel activated before countdown");
+        }
+        if (timePanel != null)
+        {
+            timePanel.SetActive(true);
+            Debug.Log("Time Panel activated before countdown");
         }
         
         // 본게임 음악 요청
@@ -434,6 +496,7 @@ public class BoxingInitializer : MonoBehaviour
             // BoxingManager의 페이즈 변경 이벤트 구독 및 시간 표시 시작
             StartCoroutine(MonitorGamePhases());
             StartCoroutine(UpdatePhaseTimer());
+            StartCoroutine(UpdateGameUI()); // 게임 UI 실시간 업데이트
         }
         
         // Easy Phase TTS 시작
@@ -463,6 +526,50 @@ public class BoxingInitializer : MonoBehaviour
         }
         
         Debug.Log("Game finished - preparing to show results");
+    }
+    
+    /// <summary>
+    /// 게임 UI 실시간 업데이트
+    /// </summary>
+    IEnumerator UpdateGameUI()
+    {
+        while (boxingManager != null && boxingManager.currentPhase != BoxingManager.GamePhase.Finished)
+        {
+            // 점수 업데이트
+            if (scoreText != null && boxingManager != null)
+            {
+                scoreText.text = boxingManager.Score.ToString();
+            }
+            
+            // 콤보 업데이트
+            if (comboText != null && boxingManager != null)
+            {
+                comboText.text = boxingManager.Combo.ToString();
+            }
+            
+            // 남은 시간 업데이트
+            if (timeText != null && boxingManager != null)
+            {
+                float remainingTime = boxingManager.GetRemainingPhaseTime();
+                int minutes = Mathf.FloorToInt(remainingTime / 60);
+                int seconds = Mathf.FloorToInt(remainingTime % 60);
+                timeText.text = $"{minutes:00}:{seconds:00}";
+            }
+            
+            yield return new WaitForSeconds(0.1f); // 0.1초마다 업데이트
+        }
+    }
+    
+    /// <summary>
+    /// Stage 패널을 해당 스테이지 내내 표시
+    /// </summary>
+    void ShowStagePanel(GameObject stagePanel, string stageName)
+    {
+        if (stagePanel != null)
+        {
+            Debug.Log($"Showing {stageName} - will remain visible during the stage");
+            stagePanel.SetActive(true);
+        }
     }
     
     /// <summary>
@@ -527,26 +634,49 @@ public class BoxingInitializer : MonoBehaviour
             Debug.Log("Background music stopped");
         }
         
-        // 콤보 UI 비활성화
-        if (boxingManager != null && boxingManager.ComboUI != null)
+        // 게임 UI 비활성화 (Score만 제외)
+        if (comboPanel != null)
         {
-            boxingManager.ComboUI.SetActive(false);
-            Debug.Log("Combo UI deactivated on game end");
+            comboPanel.SetActive(false);
+            Debug.Log("Combo Panel deactivated on game end");
         }
+        if (timePanel != null)
+        {
+            timePanel.SetActive(false);
+            Debug.Log("Time Panel deactivated on game end");
+        }
+        // 모든 스테이지 패널 비활성화
+        if (stage1Panel != null)
+        {
+            stage1Panel.SetActive(false);
+            Debug.Log("Stage 1 Panel deactivated on game end");
+        }
+        if (stage2Panel != null)
+        {
+            stage2Panel.SetActive(false);
+            Debug.Log("Stage 2 Panel deactivated on game end");
+        }
+        
+        // Score Panel은 활성화 유지하여 최종 점수 표시
+        
+        // 점수 집계 중단 (결과 패널 표시 직전에만)
+        if (boxingManager != null)
+        {
+            boxingManager.StopScoreCounting();
+            Debug.Log("Score counting stopped - final score locked");
+        }
+        
+        // 최종 점수 다시 가져오기 (점수 집계 중단 후)
+        int lockedFinalScore = boxingManager != null ? boxingManager.Score : finalScore;
+        Debug.Log($"Final locked score: {lockedFinalScore}");
         
         // 최소 점수 달성 여부 확인
-        bool isSuccess = finalScore >= minScoreToWin;
+        bool isSuccess = lockedFinalScore >= minScoreToWin;
         
-        // 카운트다운 패널 다시 활성화하고 점수 표시
-        if (countdownPanel != null)
+        // Score Panel에 최종 점수 표시
+        if (scoreText != null)
         {
-            countdownPanel.SetActive(true);
-        }
-        
-        // 최종 점수만 표시 (성공/실패 텍스트 제거)
-        if (countdownText != null)
-        {
-            countdownText.text = $"최종 점수: {finalScore}";
+            scoreText.text = lockedFinalScore.ToString();
         }
         
         // 성공/실패에 따른 패널 표시
@@ -572,7 +702,7 @@ public class BoxingInitializer : MonoBehaviour
         }
         
         // 결과 표시 및 전환 시퀀스 시작
-        StartCoroutine(ShowResultAndTransition(finalScore));
+        StartCoroutine(ShowResultAndTransition(lockedFinalScore));
     }
     
     /// <summary>
@@ -591,10 +721,23 @@ public class BoxingInitializer : MonoBehaviour
             variousAudioController.PlayResultPanelClose();
         }
         
-        // 2. 흰색 배경 2초간 표시
-        yield return StartCoroutine(FadeWhiteBackground(0f, 1f, 0.5f)); // 0.5초로 빠르게 페이드인
-        yield return new WaitForSeconds(1.0f); // 1초 유지
-        yield return StartCoroutine(FadeWhiteBackground(1f, 0f, 0.5f)); // 0.5초로 빠르게 페이드아웃
+        // 모든 게임 UI 패널 비활성화 (5초 후)
+        if (scorePanel != null)
+        {
+            scorePanel.SetActive(false);
+            Debug.Log("Score Panel deactivated after 5 seconds");
+        }
+        if (successPanel != null)
+        {
+            successPanel.SetActive(false);
+        }
+        if (failurePanel != null)
+        {
+            failurePanel.SetActive(false);
+        }
+        
+        // 2. 흰색 배경 효과 (2초: 1초 페이드인 + 1초 페이드아웃)
+        yield return StartCoroutine(FadeWhiteBackground(2f));
         
         // 3. 원래 상태로 복원
         RestoreOriginalState();
@@ -616,6 +759,24 @@ public class BoxingInitializer : MonoBehaviour
     void OnPhaseChanged(BoxingManager.GamePhase newPhase)
     {
         Debug.Log($"Phase changed to: {newPhase}");
+        
+        // Stage 패널 표시 (이전 스테이지 패널 숨기기 + 새 스테이지 패널 표시)
+        switch (newPhase)
+        {
+            case BoxingManager.GamePhase.Normal:
+                // Easy Phase에서 Normal Phase로 전환 시
+                ShowStagePanel(stage1Panel, "Stage 1 - Normal Phase");
+                break;
+            case BoxingManager.GamePhase.Hard:
+                // Normal Phase에서 Hard Phase로 전환 시
+                if (stage1Panel != null)
+                {
+                    stage1Panel.SetActive(false);
+                    Debug.Log("Stage 1 panel hidden as transitioning to Stage 2");
+                }
+                ShowStagePanel(stage2Panel, "Stage 2 - Hard Phase");
+                break;
+        }
         
         if (ttsManager != null)
         {
@@ -645,75 +806,76 @@ public class BoxingInitializer : MonoBehaviour
     }
     
     /// <summary>
-    /// 흰색 배경 표시/숨김 효과 (CanvasGroup 알파값 + 감마값 페이드)
+    /// 흰색 배경 효과 (0 → 1 → 0 패턴으로 알파값 조절)
     /// </summary>
-    /// <param name="startAlpha">시작 상태 (0: 숨김, 1: 표시)</param>
-    /// <param name="endAlpha">끝 상태 (0: 숨김, 1: 표시)</param>
-    /// <param name="duration">지속 시간</param>
+    /// <param name="duration">전체 지속 시간 (절반씩 페이드인/아웃)</param>
     /// <returns></returns>
-    private IEnumerator FadeWhiteBackground(float startAlpha, float endAlpha, float duration)
+    private IEnumerator FadeWhiteBackground(float duration)
     {
         if (whiteBackgroundObject == null) yield break;
         
+        // 하얀색 이미지 컴포넌트 찾기
+        UnityEngine.UI.Image whiteImage = whiteBackgroundObject.GetComponent<UnityEngine.UI.Image>();
+        
+        if (whiteImage == null)
+        {
+            // 하위 오브젝트에서 Image 컴포넌트 찾기
+            whiteImage = whiteBackgroundObject.GetComponentInChildren<UnityEngine.UI.Image>();
+        }
+        
+        if (whiteImage == null)
+        {
+            Debug.LogError("White background object has no Image component!");
+            yield break;
+        }
+        
+        float halfDuration = duration / 2f;
+        
+        Debug.Log($"White background fade: 0 → 1 → 0 over {duration} seconds (half: {halfDuration}s each)");
+        
+        // 1단계: 알파값 0 → 1 (절반 시간)
         float elapsedTime = 0f;
-        
-        if (startAlpha < endAlpha) // 페이드 인 (0 -> 1)
+        while (elapsedTime < halfDuration)
         {
-            Debug.Log("White background fade IN started");
+            float t = elapsedTime / halfDuration;
+            float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
+            float currentAlpha = Mathf.Lerp(0f, 1f, smoothT);
+            
+            Color color = whiteImage.color;
+            color.a = currentAlpha;
+            whiteImage.color = color;
+            
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
         
-            // 1. GameObject 활성화
-            whiteBackgroundObject.SetActive(true);
-            
-            // 2. 감마값 0으로 설정 (완전 어둠)
-            RenderSettings.ambientIntensity = 0f;
-            Debug.Log("Gamma set to 0 (complete darkness)");
-            
-            // 3. 점차 증가 (어둠 -> 원래 밝기)
-            while (elapsedTime < duration)
-            {
-                float t = elapsedTime / duration;
-                float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
-                
-                RenderSettings.ambientIntensity = Mathf.Lerp(0f, originalAmbientIntensity, smoothT);
-                
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            
-            // 4. 최종값 설정 (원래 밝기로 복원)
-            RenderSettings.ambientIntensity = originalAmbientIntensity;
-            Debug.Log($"White background fade IN completed - Gamma restored to {originalAmbientIntensity}");
-        }
-        else // 페이드 아웃 (1 -> 0)
+        // 중간값 확실히 설정 (알파값 1)
+        Color midColor = whiteImage.color;
+        midColor.a = 1f;
+        whiteImage.color = midColor;
+        
+        // 2단계: 알파값 1 → 0 (나머지 절반 시간)
+        elapsedTime = 0f;
+        while (elapsedTime < halfDuration)
         {
-            Debug.Log("White background fade OUT started");
+            float t = elapsedTime / halfDuration;
+            float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
+            float currentAlpha = Mathf.Lerp(1f, 0f, smoothT);
             
-            // 1. GameObject는 이미 활성화되어 있음
-            // 2. 현재 감마값에서 0으로 점차 감소 (밝음 -> 어둠)
-            float currentGamma = RenderSettings.ambientIntensity;
+            Color color = whiteImage.color;
+            color.a = currentAlpha;
+            whiteImage.color = color;
             
-            while (elapsedTime < duration)
-            {
-                float t = elapsedTime / duration;
-                float smoothT = t * t * (3f - 2f * t); // 부드러운 곡선 보간
-                
-                RenderSettings.ambientIntensity = Mathf.Lerp(currentGamma, 0f, smoothT);
-                
-                elapsedTime += Time.deltaTime;
-                yield return null;
-            }
-            
-            // 3. 감마값 0으로 설정 (완전 어둠)
-            RenderSettings.ambientIntensity = 0f;
-            Debug.Log("Gamma set to 0 (complete darkness)");
-            
-            // 4. GameObject 비활성화
-            whiteBackgroundObject.SetActive(false);
-            
-            // 5. 감마값 원래대로 복원
-            RenderSettings.ambientIntensity = originalAmbientIntensity;
-            Debug.Log($"White background fade OUT completed - GameObject deactivated, Gamma restored to {originalAmbientIntensity}");
+            elapsedTime += Time.deltaTime;
+            yield return null;
         }
+        
+        // 최종 알파값 설정 (0)
+        Color finalColor = whiteImage.color;
+        finalColor.a = 0f;
+        whiteImage.color = finalColor;
+        
+        Debug.Log($"White background fade completed - Alpha returned to 0");
     }
     
     /// <summary>
@@ -789,16 +951,6 @@ public class BoxingInitializer : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         
-        // 결과 패널들 비활성화
-        if (successPanel != null)
-        {
-            successPanel.SetActive(false);
-        }
-        if (failurePanel != null)
-        {
-            failurePanel.SetActive(false);
-        }
-        
         // 대화 컨트롤러에 게임 점수 전달
         if (dialogueController != null)
         {
@@ -810,14 +962,23 @@ public class BoxingInitializer : MonoBehaviour
             }
         }
         
+        // 플레이어 Y rotation 90도 회전 (복싱 종료 후 원래 방향으로)
+        if (xrOrigin != null)
+        {
+            Vector3 currentRotation = xrOrigin.eulerAngles;
+            currentRotation.y += 90f; // Y축으로 90도 회전
+            xrOrigin.rotation = Quaternion.Euler(currentRotation);
+            Debug.Log($"Player rotated by 90 degrees on Y axis. New rotation: {currentRotation}");
+        }
+        
         // 여주인공 캐릭터 위치 설정 (플레이어 기준 x: +1,z: 0)
         if (heroineCharacter != null && xrOrigin != null)
         {
             Vector3 playerPosition = xrOrigin.position;
             Vector3 heroinePosition = new Vector3(
-                playerPosition.x + 1f,  // x축으로 +1
+                playerPosition.x + 1.5f,  // x축으로 +1
                 playerPosition.y,       // y축은
-                playerPosition.z + 1f   // z축으로 1
+                playerPosition.z   // z축으로 1
             );
             
             heroineCharacter.transform.position = heroinePosition;

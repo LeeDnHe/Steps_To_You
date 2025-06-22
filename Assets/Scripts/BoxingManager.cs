@@ -30,8 +30,7 @@ public class BoxingManager : MonoBehaviour
     public float MinHitVelocity = 2.0f; // 최소 충격 속도 (m/s)
     
     [Header("UI Elements")]
-    public GameObject ComboUI; // 콤보 UI
-    public TextMeshProUGUI ComboText; // 콤보 텍스트
+    // 기존 UI는 BoxingInitializer에서 관리
     
     [Header("Audio")]
     public AudioClip DestroyAudio; // 큐브가 사라질 때 재생할 오디오
@@ -59,6 +58,7 @@ public class BoxingManager : MonoBehaviour
     private float phaseStartTime; // 현재 페이즈 시작 시간
     private bool isRestTime = false;
     private bool gameStarted = false;
+    private bool scoreCountingEnabled = true; // 점수 집계 활성화 여부
     
     // 페이즈별 설정값
     private PhaseSettings easyPhase = new PhaseSettings(20f, 1.5f, 0.5f, 0.4f, 8f); // 20초, 1.5초 스폰, 0.5배속, 0.4배 범위
@@ -67,6 +67,9 @@ public class BoxingManager : MonoBehaviour
     
     private List<BoxingCube> activeCubes = new List<BoxingCube>();
     private AudioSource audioSource;
+    
+    // 활성 큐브 개수 확인용 프로퍼티
+    public int ActiveCubesCount => activeCubes.Count;
     
     // 실시간 속도 추적을 위한 변수들
     private Queue<Vector3> leftControllerPositions = new Queue<Vector3>();
@@ -345,6 +348,15 @@ public class BoxingManager : MonoBehaviour
     
     public void OnCubeHit(BoxingCube cube, bool hitByCorrectController, Collider hitController)
     {
+        // 점수 집계가 비활성화되어 있으면 점수 처리 안함
+        if (!scoreCountingEnabled)
+        {
+            // 큐브는 여전히 파괴됨 (시각적 효과)
+            activeCubes.Remove(cube);
+            Destroy(cube.gameObject);
+            return;
+        }
+        
         // 금지 오브젝트를 쳤을 때
         if (cube.IsForbiddenCube)
         {
@@ -407,7 +419,6 @@ public class BoxingManager : MonoBehaviour
                     PlayRightCubeHitVFX(cube.transform.position);
                 }
                 
-                UpdateComboUI();
                 activeCubes.Remove(cube);
                 Destroy(cube.gameObject);
             }
@@ -588,20 +599,11 @@ public class BoxingManager : MonoBehaviour
     }
     
     // 콤보 관련 메서드들
-    void UpdateComboUI()
-    {
-        if (ComboText != null)
-        {
-            ComboText.text = $"Combo: {Combo}";
-        }
-    }
-    
     void ResetCombo()
     {
         if (Combo > 0)
         {
             Combo = 0;
-            UpdateComboUI();
             PlayComboBreakSound();
             Debug.Log("Combo Reset!");
         }
@@ -634,5 +636,14 @@ public class BoxingManager : MonoBehaviour
         float remainingTime = currentSettings.duration - elapsedTime;
         
         return Mathf.Max(0f, remainingTime);
+    }
+    
+    /// <summary>
+    /// 점수 집계를 중단합니다 (결과 패널 표시 직전에 호출)
+    /// </summary>
+    public void StopScoreCounting()
+    {
+        scoreCountingEnabled = false;
+        Debug.Log("Score counting stopped - no more points will be added");
     }
 }

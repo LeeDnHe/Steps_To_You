@@ -18,7 +18,7 @@ public class BranchingDialogue : MonoBehaviour
     public GameObject popup_20;
     
     [Header("Score Settings")]
-    public int currentScore = 0; // 현재 점수 저장
+    public int totalAffectionScore = 0; // 누적된 총 호감도 점수
     public bool debugMode = false; // 디버그 모드
     
     private GameObject lastPopup; // 마지막에 띄운 오브젝트 저장용
@@ -26,17 +26,17 @@ public class BranchingDialogue : MonoBehaviour
     private CanvasGroup currentCanvasGroup; // 현재 팝업의 CanvasGroup
     
     /// <summary>
-    /// 점수에 따른 팝업 표시 및 점수 저장
+    /// 점수에 따른 팝업 표시 및 호감도 누적
     /// </summary>
-    /// <param name="score">저장할 점수</param>
+    /// <param name="score">누적할 호감도 점수</param>
     public void ShowPopupAndSaveScore(int score)
     {
-        // 점수 저장
-        currentScore = score;
+        // 호감도 누적
+        totalAffectionScore += score;
         
         if (debugMode)
         {
-            Debug.Log($"BranchingDialogue: Score saved = {currentScore}");
+            Debug.Log($"BranchingDialogue: Added {score} points. Total affection score = {totalAffectionScore}");
         }
         
         // 점수에 따른 팝업 표시
@@ -164,24 +164,43 @@ public class BranchingDialogue : MonoBehaviour
     }
     
     /// <summary>
-    /// 현재 저장된 점수 반환
+    /// 현재 누적된 총 호감도 점수 반환
     /// </summary>
-    /// <returns>현재 점수</returns>
+    /// <returns>총 호감도 점수</returns>
     public int GetCurrentScore()
     {
-        return currentScore;
+        if (debugMode)
+        {
+            Debug.Log($"BranchingDialogue: Returning total affection score = {totalAffectionScore}");
+        }
+        
+        return totalAffectionScore;
     }
     
     /// <summary>
-    /// 점수 초기화
+    /// 호감도 점수 초기화
     /// </summary>
     public void ResetScore()
     {
-        currentScore = 0;
+        totalAffectionScore = 0;
         
         if (debugMode)
         {
-            Debug.Log("BranchingDialogue: Score reset to 0");
+            Debug.Log("BranchingDialogue: Total affection score reset to 0");
+        }
+    }
+    
+    /// <summary>
+    /// 현재 총 호감도 점수를 직접 설정 (필요시 사용)
+    /// </summary>
+    /// <param name="score">설정할 총 점수</param>
+    public void SetTotalScore(int score)
+    {
+        totalAffectionScore = score;
+        
+        if (debugMode)
+        {
+            Debug.Log($"BranchingDialogue: Total affection score set to {totalAffectionScore}");
         }
     }
 }
