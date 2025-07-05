@@ -14,11 +14,15 @@ public class BackgroundSoundManager : MonoBehaviour
     
     [Header("Settings")]
     public float fadeTime = 1.0f; // 페이드 시간
+    public float normalVolume = 0.25f; // 일반 볼륨
+    public float duckedVolume = 0.15f; // TTS 시 낮춘 볼륨
     public bool debugMode = false;
     
     private static BackgroundSoundManager instance;
     private AudioClip currentClip;
     private Coroutine fadeCoroutine;
+    private Coroutine volumeFadeCoroutine;
+    private float originalVolume; // 원래 볼륨 저장용
     
     public static BackgroundSoundManager Instance
     {
@@ -64,6 +68,8 @@ public class BackgroundSoundManager : MonoBehaviour
         // 기본 설정
         backgroundAudioSource.loop = true;
         backgroundAudioSource.playOnAwake = false;
+        backgroundAudioSource.volume = normalVolume;
+        originalVolume = normalVolume;
     }
     
     void Start()
@@ -247,5 +253,77 @@ public class BackgroundSoundManager : MonoBehaviour
     public bool IsPlaying()
     {
         return backgroundAudioSource != null && backgroundAudioSource.isPlaying;
+    }
+    
+    /// <summary>
+    /// TTS 재생을 위해 배경음악 볼륨을 낮춤
+    /// </summary>
+    public void DuckVolumeForTTS()
+    {
+        if (backgroundAudioSource == null) return;
+        
+        // 현재 볼륨 저장
+        originalVolume = backgroundAudioSource.volume;
+        
+        // 볼륨을 낮춤
+        SetVolumeWithFade(duckedVolume);
+        
+        if (debugMode)
+            Debug.Log($"Volume ducked for TTS: {originalVolume} → {duckedVolume}");
+    }
+    
+    /// <summary>
+    /// TTS 종료 후 배경음악 볼륨을 복원
+    /// </summary>
+    public void RestoreVolumeAfterTTS()
+    {
+        if (backgroundAudioSource == null) return;
+        
+        // 저장된 볼륨으로 복원
+        SetVolumeWithFade(originalVolume);
+        
+        if (debugMode)
+            Debug.Log($"Volume restored after TTS: {duckedVolume} → {originalVolume}");
+    }
+    
+    /// <summary>
+    /// 페이드 효과와 함께 볼륨 설정
+    /// </summary>
+    /// <param name="targetVolume">목표 볼륨</param>
+    private void SetVolumeWithFade(float targetVolume)
+    {
+        if (backgroundAudioSource == null) return;
+        
+        // 진행 중인 볼륨 페이드 중단
+        if (volumeFadeCoroutine != null)
+        {
+            StopCoroutine(volumeFadeCoroutine);
+        }
+        
+        // 새로운 볼륨 페이드 시작
+        volumeFadeCoroutine = StartCoroutine(FadeVolume(targetVolume));
+    }
+    
+    /// <summary>
+    /// 볼륨 페이드 코루틴
+    /// </summary>
+    /// <param name="targetVolume">목표 볼륨</param>
+    /// <returns></returns>
+    private IEnumerator FadeVolume(float targetVolume)
+    {
+        if (backgroundAudioSource == null) yield break;
+        
+        float startVolume = backgroundAudioSource.volume;
+        float elapsedTime = 0;
+        
+        while (elapsedTime < fadeTime)
+        {
+            backgroundAudioSource.volume = Mathf.Lerp(startVolume, targetVolume, elapsedTime / fadeTime);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        backgroundAudioSource.volume = targetVolume;
+        volumeFadeCoroutine = null;
     }
 } 

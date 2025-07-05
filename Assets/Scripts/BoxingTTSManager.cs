@@ -18,6 +18,9 @@ public class BoxingTTSManager : MonoBehaviour
     [Header("Boxing Manager Reference")]
     public BoxingManager boxingManager;
     
+    [Header("Background Sound Manager Reference")]
+    public BackgroundSoundManager backgroundSoundManager;
+    
     [Header("Settings")]
     public float delayBetweenTTS = 0.5f;
     
@@ -40,6 +43,12 @@ public class BoxingTTSManager : MonoBehaviour
             }
         }
         Debug.Log($"AudioSource initialized: {audioSource != null}");
+        
+        // BackgroundSoundManager 초기화
+        if (backgroundSoundManager == null)
+        {
+            backgroundSoundManager = BackgroundSoundManager.Instance;
+        }
         
         Debug.Log("BoxingTTSManager initialized - waiting for external trigger");
     }
@@ -145,6 +154,12 @@ public class BoxingTTSManager : MonoBehaviour
     {
         Debug.Log($"Starting TTS sequence with {ttsClips.Count} clips");
         
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
+        
         foreach (AudioClip clip in ttsClips)
         {
             if (clip != null && audioSource != null)
@@ -170,6 +185,12 @@ public class BoxingTTSManager : MonoBehaviour
             Debug.Log("AudioSource cleared after TTS sequence completion");
         }
         
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
+        }
+        
         Debug.Log("TTS sequence completed");
         onComplete?.Invoke();
     }
@@ -180,6 +201,12 @@ public class BoxingTTSManager : MonoBehaviour
     IEnumerator PlayTTSSequenceWithCallback(List<AudioClip> ttsClips, System.Action onComplete = null, System.Action<int> onClipStart = null)
     {
         Debug.Log($"Starting TTS sequence with callback - {ttsClips.Count} clips");
+        
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
         
         for (int i = 0; i < ttsClips.Count; i++)
         {
@@ -209,6 +236,12 @@ public class BoxingTTSManager : MonoBehaviour
             audioSource.clip = null;
             audioSource.Stop();
             Debug.Log("AudioSource cleared after TTS sequence completion");
+        }
+        
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
         }
         
         Debug.Log("TTS sequence with callback completed");

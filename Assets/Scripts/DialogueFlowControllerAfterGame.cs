@@ -579,6 +579,12 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
             
         isPlayingTTS = true;
         
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
+        
         for (int i = 0; i < ttsList.Count; i++)
         {
             AudioClip clip = ttsList[i];
@@ -598,6 +604,12 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
             }
         }
         
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
+        }
+        
         isPlayingTTS = false;
     }
     
@@ -610,6 +622,12 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
             yield break;
             
         isPlayingTTS = true;
+        
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
         
         for (int i = 0; i < ttsList.Count; i++)
         {
@@ -635,6 +653,12 @@ public class DialogueFlowControllerAfterGame : MonoBehaviour
                     yield return new WaitForSeconds(delayBetweenTTS);
                 }
             }
+        }
+        
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
         }
         
         isPlayingTTS = false;

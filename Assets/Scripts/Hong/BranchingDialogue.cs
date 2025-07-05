@@ -16,7 +16,7 @@ public class BranchingDialogue : MonoBehaviour
     public GameObject popup_10;
     public GameObject popup_15;
     public GameObject popup_20;
-    
+
     [Header("Score Settings")]
     public int totalAffectionScore = 0; // 누적된 총 호감도 점수
     public bool debugMode = false; // 디버그 모드
@@ -72,8 +72,8 @@ public class BranchingDialogue : MonoBehaviour
         if (currentCanvasGroup == null)
         {
             currentCanvasGroup = popupObj.AddComponent<CanvasGroup>();
-        }
-        
+    }
+
         // 원래 위치 저장
         originalPosition = popupObj.transform.position;
         
@@ -129,7 +129,7 @@ public class BranchingDialogue : MonoBehaviour
         Vector3 almostEndPosition = Vector3.Lerp(startPosition, endPosition, 0.8f);
         
         while (elapsedTime < displayDuration)
-        {
+    {
             float t = elapsedTime / displayDuration;
             lastPopup.transform.position = Vector3.Lerp(midPosition, almostEndPosition, t);
             
@@ -140,7 +140,7 @@ public class BranchingDialogue : MonoBehaviour
         // 3단계: 페이드 아웃 + 마지막 이동 (0.5초)
         elapsedTime = 0f;
         while (elapsedTime < fadeOutDuration)
-        {
+    {
             float t = elapsedTime / fadeOutDuration;
             currentCanvasGroup.alpha = Mathf.Lerp(1f, 0f, t);
             lastPopup.transform.position = Vector3.Lerp(almostEndPosition, endPosition, t);
@@ -155,14 +155,14 @@ public class BranchingDialogue : MonoBehaviour
         lastPopup.SetActive(false);
         
         if (debugMode)
-        {
+    {
             Debug.Log($"Popup animation completed: {lastPopup.name}");
         }
         
         lastPopup = null;
         currentCanvasGroup = null;
     }
-    
+
     /// <summary>
     /// 현재 누적된 총 호감도 점수 반환
     /// </summary>
@@ -187,7 +187,7 @@ public class BranchingDialogue : MonoBehaviour
         if (debugMode)
         {
             Debug.Log("BranchingDialogue: Total affection score reset to 0");
-        }
+    }
     }
     
     /// <summary>
@@ -199,8 +199,8 @@ public class BranchingDialogue : MonoBehaviour
         totalAffectionScore = score;
         
         if (debugMode)
-        {
+    {
             Debug.Log($"BranchingDialogue: Total affection score set to {totalAffectionScore}");
-        }
+    }
     }
 }

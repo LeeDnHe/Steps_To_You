@@ -13,6 +13,7 @@ public class DialogueFlowController2 : MonoBehaviour
     
     public BoxingInitializer boxingInitializer; // 복싱 게임 초기화기 참조
     public VariousAudioController variousAudioController; // 오디오 관리 컨트롤러
+    public BackgroundSoundManager backgroundSoundManager; // 배경음악 매니저
     
     [Header("Character Animation")]
     public Animator heroineAnimator; // 여주인공 애니메이터
@@ -27,6 +28,12 @@ public class DialogueFlowController2 : MonoBehaviour
         if (npcAudio == null)
         {
             npcAudio = GetComponent<AudioSource>();
+        }
+        
+        // BackgroundSoundManager 초기화
+        if (backgroundSoundManager == null)
+        {
+            backgroundSoundManager = BackgroundSoundManager.Instance;
         }
         
         // 복싱 게임 초기 비활성화
@@ -190,6 +197,37 @@ public class DialogueFlowController2 : MonoBehaviour
         
         // 현재 오브젝트 비활성화 (다음 파트로 넘어가므로)
         gameObject.SetActive(false);
+    }
+    
+    /// <summary>
+    /// TTS 재생 with 배경음악 볼륨 조절
+    /// </summary>
+    IEnumerator PlayTTSWithVolumeControl(AudioClip clip, string animationName = "")
+    {
+        if (clip == null || npcAudio == null) yield break;
+        
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
+        
+        npcAudio.clip = clip;
+        npcAudio.Play();
+        
+        // 애니메이션 재생
+        if (heroineAnimator != null && !string.IsNullOrEmpty(animationName))
+        {
+            heroineAnimator.Play(animationName);
+        }
+        
+        yield return new WaitUntil(() => !npcAudio.isPlaying);
+        
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
+        }
     }
 
     // 🔻 각 패널의 닫기 버튼에 연결

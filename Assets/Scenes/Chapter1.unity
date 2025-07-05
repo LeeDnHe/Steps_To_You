@@ -2126,6 +2126,81 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10000, y: 10000}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &390440319
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 390440320}
+  - component: {fileID: 390440322}
+  - component: {fileID: 390440321}
+  m_Layer: 5
+  m_Name: Stage3Panel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &390440320
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390440319}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1923277739}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 70}
+  m_SizeDelta: {x: 200, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &390440321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390440319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: c449511e24c351e4aabfb210c66470c0, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &390440322
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 390440319}
+  m_CullTransparentMesh: 1
 --- !u!1 &398376396
 GameObject:
   m_ObjectHideFlags: 0
@@ -2438,6 +2513,7 @@ MonoBehaviour:
   NPCPanel2: {fileID: 1124889814}
   DialogueFlowController2: {fileID: 531470681}
   variousAudioController: {fileID: 1171271899}
+  backgroundSoundManager: {fileID: 1251901699}
   heroineAnimator: {fileID: 919132149216300064}
 --- !u!82 &417679955
 AudioSource:
@@ -3561,6 +3637,7 @@ MonoBehaviour:
   dialogueJjo: {fileID: 1149367565}
   boxingInitializer: {fileID: 1199484796}
   variousAudioController: {fileID: 1171271899}
+  backgroundSoundManager: {fileID: 1251901699}
   heroineAnimator: {fileID: 919132149216300064}
 --- !u!82 &531470684
 AudioSource:
@@ -6019,7 +6096,11 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: -1186918404515054163, guid: 63ca97d7971797c47a0b8c63ec2d29ea,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 992589151}
   m_SourcePrefab: {fileID: 100100000, guid: 63ca97d7971797c47a0b8c63ec2d29ea, type: 3}
 --- !u!1 &992589149 stripped
 GameObject:
@@ -6027,6 +6108,33 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 992589148}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &992589150 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -1186918404515054163, guid: 63ca97d7971797c47a0b8c63ec2d29ea,
+    type: 3}
+  m_PrefabInstance: {fileID: 992589148}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &992589151
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 992589150}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.6, y: 1.2, z: 0.5}
+  m_Center: {x: 0, y: 0, z: 0.3}
 --- !u!1 &1009115519
 GameObject:
   m_ObjectHideFlags: 0
@@ -8146,6 +8254,11 @@ PrefabInstance:
       objectReference: {fileID: 1528462352}
     - target: {fileID: 7970128962323313232, guid: 5339ddca008078043afe5c89cbb6555f,
         type: 3}
+      propertyPath: stage3Panel
+      value: 
+      objectReference: {fileID: 390440319}
+    - target: {fileID: 7970128962323313232, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
       propertyPath: boxingSkybox
       value: 
       objectReference: {fileID: 2100000, guid: 4123f863d653076409dbf796dd44e270, type: 2}
@@ -8371,6 +8484,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1528462353}
+    - targetCorrespondingSourceObject: {fileID: 6626525856298671494, guid: 5339ddca008078043afe5c89cbb6555f,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 390440320}
     - targetCorrespondingSourceObject: {fileID: 6626525856298671494, guid: 5339ddca008078043afe5c89cbb6555f,
         type: 3}
       insertIndex: -1
@@ -9081,6 +9198,8 @@ MonoBehaviour:
   mainGameMusic: {fileID: 8300000, guid: 10ebdc2ffd8086a43996c0d53d8f8d68, type: 3}
   finalDialogueMusic: {fileID: 8300000, guid: ab167ef004fd4b84193f59bfadaca278, type: 3}
   fadeTime: 1
+  normalVolume: 0.25
+  duckedVolume: 0.15
   debugMode: 0
 --- !u!1 &1258293875
 GameObject:
@@ -13335,7 +13454,6 @@ MonoBehaviour:
   playerTransform: {fileID: 470092475}
   heroineWalkDuration: 1
   heroineAnimator: {fileID: 919132149216300064}
-  uiCanvas: {fileID: 1265919624}
   branchingDialogue: {fileID: 28349128}
   nextDialogueController: {fileID: 1221034511}
   whiteBackgroundObject: {fileID: 377342552}

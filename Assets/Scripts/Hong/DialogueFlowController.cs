@@ -16,6 +16,7 @@ public class DialogueFlowController : MonoBehaviour
     public GameObject DialogueFlowController2;
     
     public VariousAudioController variousAudioController; // 오디오 관리 컨트롤러
+    public BackgroundSoundManager backgroundSoundManager; // 배경음악 매니저
     
     [Header("Character Animation")]
     public Animator heroineAnimator; // 여주인공 애니메이터
@@ -30,6 +31,12 @@ public class DialogueFlowController : MonoBehaviour
     {
         // 같은 오브젝트의 AudioSource 컴포넌트 가져오기
         npcAudio = GetComponent<AudioSource>();
+        
+        // BackgroundSoundManager 초기화
+        if (backgroundSoundManager == null)
+        {
+            backgroundSoundManager = BackgroundSoundManager.Instance;
+        }
         
         if (!isRunning)
         {
@@ -212,6 +219,37 @@ public class DialogueFlowController : MonoBehaviour
         gameObject.SetActive(false);
 
         isRunning = false;
+    }
+
+    /// <summary>
+    /// TTS 재생 with 배경음악 볼륨 조절
+    /// </summary>
+    IEnumerator PlayTTSWithVolumeControl(AudioClip clip, string animationName = "")
+    {
+        if (clip == null || npcAudio == null) yield break;
+        
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
+        
+        npcAudio.clip = clip;
+        npcAudio.Play();
+        
+        // 애니메이션 재생
+        if (heroineAnimator != null && !string.IsNullOrEmpty(animationName))
+        {
+            heroineAnimator.Play(animationName);
+        }
+        
+        yield return new WaitUntil(() => !npcAudio.isPlaying);
+        
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
+        }
     }
 
     // 🔻 UI 버튼 또는 Ray로 호출할 함수들

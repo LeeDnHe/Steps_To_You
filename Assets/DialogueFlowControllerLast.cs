@@ -347,11 +347,23 @@ public class DialogueFlowControllerLast : MonoBehaviour
         
         Debug.Log($"Playing TTS: {clipName} (Length: {clip.length}s)");
         
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
+        
         ttsAudioSource.clip = clip;
         ttsAudioSource.Play();
         
         // TTS 재생 완료까지 대기
         yield return new WaitForSeconds(clip.length);
+        
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
+        }
         
         Debug.Log($"TTS completed: {clipName}");
     }
@@ -369,6 +381,12 @@ public class DialogueFlowControllerLast : MonoBehaviour
         
         Debug.Log($"Playing TTS: {clipName} (Length: {clip.length}s) with animation: {animationName}");
         
+        // TTS 시작 시 배경음악 볼륨 낮춤
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.DuckVolumeForTTS();
+        }
+        
         ttsAudioSource.clip = clip;
         ttsAudioSource.Play();
         
@@ -381,6 +399,12 @@ public class DialogueFlowControllerLast : MonoBehaviour
         
         // TTS 재생 완료까지 대기
         yield return new WaitForSeconds(clip.length);
+        
+        // TTS 종료 시 배경음악 볼륨 복원
+        if (backgroundSoundManager != null)
+        {
+            backgroundSoundManager.RestoreVolumeAfterTTS();
+        }
         
         Debug.Log($"TTS completed: {clipName}");
     }

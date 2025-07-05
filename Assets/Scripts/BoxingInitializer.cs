@@ -38,8 +38,9 @@ public class BoxingInitializer : MonoBehaviour
     public TextMeshProUGUI comboText;
     public GameObject timePanel;
     public TextMeshProUGUI timeText;
-    public GameObject stage1Panel; // Normal Phase 표시
-    public GameObject stage2Panel; // Hard Phase 표시
+    public GameObject stage1Panel; // Easy Phase 표시
+    public GameObject stage2Panel; // Normal Phase 표시
+    public GameObject stage3Panel; // Hard Phase 표시
     
     [Header("Game Flow Settings")]
     public float delayAfterPreGameTTS = 0.5f;
@@ -96,7 +97,7 @@ public class BoxingInitializer : MonoBehaviour
             }
             
             if (whiteImage != null)
-            {
+        {
                 Color color = whiteImage.color;
                 color.a = 0f;
                 whiteImage.color = color;
@@ -134,6 +135,8 @@ public class BoxingInitializer : MonoBehaviour
             stage1Panel.SetActive(false);
         if (stage2Panel != null)
             stage2Panel.SetActive(false);
+        if (stage3Panel != null)
+            stage3Panel.SetActive(false);
             
         // 대화 컨트롤러 초기 비활성화
         if (dialogueController != null)
@@ -647,16 +650,21 @@ public class BoxingInitializer : MonoBehaviour
         }
         // 모든 스테이지 패널 비활성화
         if (stage1Panel != null)
-        {
+            {
             stage1Panel.SetActive(false);
             Debug.Log("Stage 1 Panel deactivated on game end");
         }
         if (stage2Panel != null)
-        {
+            {
             stage2Panel.SetActive(false);
             Debug.Log("Stage 2 Panel deactivated on game end");
-        }
-        
+            }
+        if (stage3Panel != null)
+            {
+            stage3Panel.SetActive(false);
+            Debug.Log("Stage 3 Panel deactivated on game end");
+            }
+            
         // Score Panel은 활성화 유지하여 최종 점수 표시
         
         // 점수 집계 중단 (결과 패널 표시 직전에만)
@@ -669,13 +677,13 @@ public class BoxingInitializer : MonoBehaviour
         // 최종 점수 다시 가져오기 (점수 집계 중단 후)
         int lockedFinalScore = boxingManager != null ? boxingManager.Score : finalScore;
         Debug.Log($"Final locked score: {lockedFinalScore}");
-        
+                
         // 최소 점수 달성 여부 확인
         bool isSuccess = lockedFinalScore >= minScoreToWin;
         
         // Score Panel에 최종 점수 표시
         if (scoreText != null)
-        {
+            {
             scoreText.text = lockedFinalScore.ToString();
         }
         
@@ -690,7 +698,7 @@ public class BoxingInitializer : MonoBehaviour
         else
         {
             if (failurePanel != null)
-            {
+    {
                 failurePanel.SetActive(true);
             }
         }
@@ -738,13 +746,13 @@ public class BoxingInitializer : MonoBehaviour
         
         // 2. 흰색 배경 효과 (2초: 1초 페이드인 + 1초 페이드아웃)
         yield return StartCoroutine(FadeWhiteBackground(2f));
-        
+            
         // 3. 원래 상태로 복원
         RestoreOriginalState();
         
         // 4. 기본 배경음악으로 복원
         if (backgroundSoundManager != null)
-        {
+            {
             backgroundSoundManager.PlayDefaultMusic();
             Debug.Log("Default music restored");
         }
@@ -763,18 +771,27 @@ public class BoxingInitializer : MonoBehaviour
         // Stage 패널 표시 (이전 스테이지 패널 숨기기 + 새 스테이지 패널 표시)
         switch (newPhase)
         {
+            case BoxingManager.GamePhase.Easy:
+                // 게임 시작 시 Easy Phase
+                ShowStagePanel(stage1Panel, "Stage 1 - Easy Phase");
+                break;
             case BoxingManager.GamePhase.Normal:
                 // Easy Phase에서 Normal Phase로 전환 시
-                ShowStagePanel(stage1Panel, "Stage 1 - Normal Phase");
-                break;
-            case BoxingManager.GamePhase.Hard:
-                // Normal Phase에서 Hard Phase로 전환 시
                 if (stage1Panel != null)
                 {
                     stage1Panel.SetActive(false);
                     Debug.Log("Stage 1 panel hidden as transitioning to Stage 2");
                 }
-                ShowStagePanel(stage2Panel, "Stage 2 - Hard Phase");
+                ShowStagePanel(stage2Panel, "Stage 2 - Normal Phase");
+                break;
+            case BoxingManager.GamePhase.Hard:
+                // Normal Phase에서 Hard Phase로 전환 시
+                if (stage2Panel != null)
+                {
+                    stage2Panel.SetActive(false);
+                    Debug.Log("Stage 2 panel hidden as transitioning to Stage 3");
+                }
+                ShowStagePanel(stage3Panel, "Stage 3 - Hard Phase");
                 break;
         }
         
@@ -920,7 +937,7 @@ public class BoxingInitializer : MonoBehaviour
             foreach (GameObject obj in backgroundAssets)
             {
                 if (obj != null)
-                {
+    {
                     obj.SetActive(true);
                     Debug.Log($"Enabled background asset: {obj.name}");
                 }
@@ -956,13 +973,13 @@ public class BoxingInitializer : MonoBehaviour
         {
             var afterGameController = dialogueController.GetComponent<DialogueFlowControllerAfterGame>();
             if (afterGameController != null && boxingManager != null)
-            {
+        {
                 afterGameController.SetGameScore(boxingManager.Score);
                 Debug.Log($"Game score {boxingManager.Score} passed to DialogueFlowControllerAfterGame");
             }
         }
         
-        // 플레이어 Y rotation 90도 회전 (복싱 종료 후 원래 방향으로)
+        // 플레이어 Y rotation 90도 회전 (복싱 종료 후 원래 방향으로) - 오브젝트 소환 전에 먼저 실행
         if (xrOrigin != null)
         {
             Vector3 currentRotation = xrOrigin.eulerAngles;
@@ -1004,7 +1021,7 @@ public class BoxingInitializer : MonoBehaviour
         // 현재 복싱 오브젝트 비활성화 (다음 파트로 넘어가므로)
         gameObject.SetActive(false);
     }
-
+    
     /// <summary>
     /// 데모 큐브 타입 열거형
     /// </summary>
@@ -1038,7 +1055,7 @@ public class BoxingInitializer : MonoBehaviour
     IEnumerator SpawnMultipleDemoCubes(CubeType cubeType, int count, float interval)
     {
         for (int i = 0; i < count; i++)
-        {
+    {
             SpawnDemoCube(cubeType);
             Debug.Log($"Demo {cubeType} cube #{i + 1} spawned (total: {count})");
             
@@ -1059,7 +1076,7 @@ public class BoxingInitializer : MonoBehaviour
     void SpawnDemoCube(CubeType cubeType)
     {
         if (boxingManager == null || demoCubeSpawnPoint == null)
-        {
+    {
             Debug.LogWarning("BoxingManager or demo spawn point not set!");
             return;
         }
@@ -1099,7 +1116,7 @@ public class BoxingInitializer : MonoBehaviour
         // 데모 큐브 이동 및 파괴 코루틴 시작
         StartCoroutine(MoveDemoCube(demoCube, cubeType));
     }
-    
+
     /// <summary>
     /// 데모 큐브 이동 및 파괴 처리
     /// </summary>
@@ -1128,7 +1145,7 @@ public class BoxingInitializer : MonoBehaviour
             
             // 1초 후 금지 큐브 조용히 사라짐 (VFX 없음)
             if (demoCube != null)
-            {
+        {
                 activeDemoCubes.Remove(demoCube);
                 Destroy(demoCube);
                 Debug.Log($"Demo Forbidden cube disappeared after 1 second without VFX");
